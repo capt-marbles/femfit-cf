@@ -23,6 +23,8 @@ BUILD — most of the volume:
 MAINTAIN — moderate volume, real loads, for posture:
 - Horizontal pulling is REQUIRED in every program: rows, face pulls, rear delt work. Upper back strength drives posture, and posture affects how the torso reads more than arm size does. At least one row and one face pull / rear delt movement per week.
 - Lats: moderate only — heavily developed lats broaden the V-taper.
+- One horizontal press (dumbbell bench or machine chest press), 2-3 sets, whenever the program has 6 or more sets of pulling. An all-pull upper body creates a shoulder imbalance over months. This is a joint-health decision, not a masculinising one: frame width comes from delts and traps, not pecs. Keep it horizontal — no overhead pressing.
+- Core: 6-9 sets per week of anti-rotation and anti-extension work (Pallof press, dead bug, bird dog, plank, hollow hold) across at least 2 days. Cutting the oblique work must not take the whole core allocation with it.
 
 LIMIT — few sets or none:
 - Heavy overhead pressing, lateral raises, upright rows, heavy shrugs. These widen and square the shoulder line.
@@ -41,6 +43,11 @@ Waist appearance comes from body fat level, from NOT thickening the obliques, an
 - Accessory lower body and all upper body: 10-15 reps.
 - Hip abduction: 12-20 reps.
 - Never apply one flat rep range to every exercise in the program.
+
+## Redundancy — do not waste slots
+- Exactly ONE heavily loaded hip hinge per week. A Romanian deadlift and a conventional deadlift in the same week is duplicated lower back fatigue for little extra return. If a second posterior chain movement is wanted, use a hamstring curl.
+- Never program both a hip thrust and a glute bridge. Same movement, and the bridge loads less. Use the slot for a second abduction variation or single-leg work.
+- At most 2 bilateral quad-dominant movements per day. Squats plus lunges plus leg press is three overlapping movements for a muscle that is not the priority. Prefer Bulgarian split squats and walking lunges — they bias toward the glutes.
 
 ## Cardio
 - 2-4 steady-state sessions per week for cardiovascular health and body composition.
@@ -97,6 +104,26 @@ export const GLUTE_PATTERNS: RegExp =
 export const LOW_PRIORITY_PATTERNS: RegExp =
   /calf raise|leg extension|wrist curl|forearm/i;
 
+/** Anti-rotation and anti-extension core work — the kind that does not widen. */
+export const CORE_PATTERNS: RegExp =
+  /pallof|dead ?bug|bird ?dog|plank|hollow|ab wheel|ab roll|leg raise|knee raise|suitcase carry|plank/i;
+
+/**
+ * Horizontal pressing. Kept in small doses for shoulder balance against pulling
+ * volume — shoulder width comes from delts and traps, not pecs.
+ */
+export const HORIZONTAL_PRESS_PATTERNS: RegExp =
+  /bench press|chest press|push.?up|pushup|floor press|pec deck|chest fly|incline press|dumbbell press/i;
+
+/**
+ * Bilateral quad-dominant movements. Unilateral variants (split squat, walking
+ * lunge) are excluded because they bias toward glutes and are the fix, not the
+ * problem.
+ */
+export const QUAD_DOMINANT_PATTERNS: RegExp = /squat|leg press|hack|leg extension|lunge/i;
+export const QUAD_EXEMPT_PATTERNS: RegExp =
+  /bulgarian|split squat|walking lunge|reverse lunge|sumo|step.?up/i;
+
 /** Compact policy summary for prompts that cannot carry the full principles. */
 export const POLICY_SUMMARY = `Build: hip abduction (6-9 sets/wk), glutes, hamstrings, quads.
 Maintain for posture: rows, face pulls, rear delts — always include pulling.
@@ -120,6 +147,7 @@ interface ValidatableExercise {
   muscleGroup?: string;
   sets?: number;
   reps?: string;
+  feminizationNote?: string;
 }
 
 interface ValidatableDay {
@@ -275,6 +303,81 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     warnings.push({
       severity: 'medium',
       message: `Only ${gluteSets} sets of glute work per week. Target 10-16 sets for meaningful growth.`,
+    });
+  }
+
+  // 9. Core volume floor. Core definition is a stated goal, and trimming the
+  //    oblique work must not take the whole core allocation with it.
+  const coreSets = setsMatching(CORE_PATTERNS);
+  if (coreSets < 6) {
+    warnings.push({
+      severity: 'medium',
+      message: `Only ${coreSets} sets of core work per week. Add a second core slot — dead bugs or hollow holds — on another day. Six sets is a reasonable floor.`,
+    });
+  }
+
+  // 10. Push/pull balance. All-pull programming causes shoulder problems over
+  //     months. A horizontal press is a joint-health choice, not a masculinising
+  //     one — the width being avoided comes from delts and traps, not pecs.
+  const pressSets = setsMatching(HORIZONTAL_PRESS_PATTERNS);
+  if (postualPullSets >= 6 && pressSets === 0) {
+    warnings.push({
+      severity: 'medium',
+      message: `${postualPullSets} sets of pulling and no pressing at all. Add one horizontal press (dumbbell bench or machine chest press, 2-3 sets) to balance the shoulder. Pecs are not what widens the frame — delts and traps are.`,
+    });
+  }
+
+  // 11. More than one heavily loaded hinge per week is a lot of lower back
+  //     fatigue, and the second one rarely adds anything the first missed.
+  const heavyHinges = all.filter(
+    ({ ex }) => HINGE_PATTERNS.test(ex.name || '') && lowestRep(ex.reps) <= 10
+  );
+  if (heavyHinges.length >= 2) {
+    const names = heavyHinges.map(({ ex }) => `"${ex.name}"`).join(' and ');
+    warnings.push({
+      severity: 'medium',
+      message: `Two heavy hinge movements in one week (${names}). That is a lot of lower back fatigue and they overlap heavily. Keep one — replace the other with a hamstring curl, or use a trap bar if you want the loading pattern.`,
+    });
+  }
+
+  // 12. Hip thrust and glute bridge are the same pattern; the bridge loads less.
+  const hasThrust = all.some(({ ex }) => /hip thrust/i.test(ex.name || ''));
+  const bridge = all.find(({ ex }) => /glute bridge|frog pump/i.test(ex.name || ''));
+  if (hasThrust && bridge) {
+    warnings.push({
+      severity: 'medium',
+      exercise: bridge.ex.name,
+      day: bridge.dayName,
+      message: `"${bridge.ex.name}" duplicates the hip thrust already in the program — same movement, less loading potential. Spend the slot on a second abduction variation or single-leg work.`,
+    });
+  }
+
+  // 13. Overlapping quad movements in one day, when quads are not the priority.
+  for (const day of days) {
+    const quadWork = (day.exercises || []).filter(
+      (ex) =>
+        QUAD_DOMINANT_PATTERNS.test(ex.name || '') && !QUAD_EXEMPT_PATTERNS.test(ex.name || '')
+    );
+    if (quadWork.length >= 3) {
+      warnings.push({
+        severity: 'medium',
+        day: day.name,
+        message: `${quadWork.length} overlapping quad movements in one day (${quadWork.map((e) => e.name).join(', ')}), and quads are not the priority. Swap one for Bulgarian split squats or walking lunges to shift emphasis toward the glutes.`,
+      });
+    }
+  }
+
+  // 14. Repeated rationale text is a sign the model padded rather than reasoned.
+  const noteCounts = new Map<string, number>();
+  for (const { ex } of all) {
+    const note = (ex.feminizationNote || '').trim().toLowerCase();
+    if (note) noteCounts.set(note, (noteCounts.get(note) || 0) + 1);
+  }
+  const repeated = [...noteCounts.entries()].filter(([, n]) => n >= 3);
+  if (repeated.length > 0) {
+    warnings.push({
+      severity: 'medium',
+      message: `${repeated.length} rationale note${repeated.length > 1 ? 's are' : ' is'} repeated verbatim across exercises. Each one should explain what that specific movement does, not restate a generic line.`,
     });
   }
 

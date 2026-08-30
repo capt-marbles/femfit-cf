@@ -65,11 +65,14 @@ ${TRAINING_PRINCIPLES}
 - ${exercisesPerDay(options.experienceLevel)} main exercises per day.
 - Every day gets a warmup (3-5 dynamic movements) and a cooldown (3-5 static stretches, hip-focused).
 - Include a weekly cardio plan of 2-4 steady-state sessions.
-- The upper body day must contain a row and a face pull or rear delt movement. At most one arm exercise, and only after those.
+- The upper body day must contain a row, a face pull or rear delt movement, and one horizontal press for shoulder balance. At most one arm exercise, and only after those.
 - Hip abduction must appear on at least 2 different days.
+- Core work must appear on at least 2 different days.
+- Before finalising, check the whole week for redundancy: only one heavy hinge, never both a hip thrust and a glute bridge, no more than 2 bilateral quad movements in a day.
 
 ## Writing the feminizationNote field
-Explain the actual mechanism — which muscle it develops and why that serves the goal. Never write "lighter weights to avoid bulk" or "toning"; that reasoning is false. If an exercise is included for posture or joint health rather than shape, say so plainly.
+Explain the actual mechanism — which muscle this specific movement develops and why that serves the goal. Never write "lighter weights to avoid bulk" or "toning"; that reasoning is false. If an exercise is included for posture or joint health rather than shape, say so plainly.
+Every note must be different from every other note in the program. Repeating the same sentence across exercises means you are padding instead of reasoning — if two exercises genuinely share a rationale, one of them is redundant and should be replaced.
 
 Respond ONLY with valid JSON matching this exact schema:
 {
