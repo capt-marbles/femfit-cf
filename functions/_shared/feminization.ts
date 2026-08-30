@@ -44,9 +44,19 @@ Waist appearance comes from body fat level, from NOT thickening the obliques, an
 - Hip abduction: 12-20 reps.
 - Never apply one flat rep range to every exercise in the program.
 
+## Weekly set targets — count these before finalising
+- Glute max (hip thrust, RDL, split squat, lunge, kickback): 10-16 sets. This is the primary target and must have the most volume of any muscle.
+- Hip abduction / gluteus medius: 6-9 sets. Do NOT exceed 9. It is a smaller muscle and more is not better. Its volume must never exceed glute max volume — if it does, the priority is inverted.
+- Hamstrings: 6-10 sets, and a Romanian deadlift alone does not cover it. Include a leg curl so the knee-flexion function is trained.
+- Quads: 6-10 sets.
+- Core (anti-rotation / anti-extension): 6-9 sets across 2+ days.
+- Pulling: 6-9 sets. Horizontal press: 2-3 sets.
+
 ## Redundancy — do not waste slots
 - Exactly ONE heavily loaded hip hinge per week. A Romanian deadlift and a conventional deadlift in the same week is duplicated lower back fatigue for little extra return. If a second posterior chain movement is wanted, use a hamstring curl.
-- Never program both a hip thrust and a glute bridge. Same movement, and the bridge loads less. Use the slot for a second abduction variation or single-leg work.
+- Never program both a hip thrust and a glute bridge. Same movement, and the bridge loads less. Use the slot for single-leg glute work or a hamstring curl.
+- Never program both a squat and a leg press. Same bilateral knee-dominant pattern, and the leg press does less for the hips.
+- Never include calf raises, leg extensions or wrist work. They do not serve the goal, and every slot they take is one a hamstring or glute movement should have had. If an exercise can only be justified as "low priority", leave it out.
 - At most 2 bilateral quad-dominant movements per day. Squats plus lunges plus leg press is three overlapping movements for a muscle that is not the priority. Prefer Bulgarian split squats and walking lunges — they bias toward the glutes.
 
 ## Cardio
@@ -99,6 +109,13 @@ export const THRUST_PATTERNS: RegExp =
 /** Glute max work generally. */
 export const GLUTE_PATTERNS: RegExp =
   /glute|hip thrust|kickback|donkey kick|romanian deadlift|\brdl\b|sumo|step.?up|split squat|lunge|good morning/i;
+
+/** Hamstring work. An RDL alone does not cover this. */
+export const HAMSTRING_PATTERNS: RegExp =
+  /romanian deadlift|\brdl\b|leg curl|hamstring curl|nordic|good morning|stiff.?leg|glute ham/i;
+
+/** Bilateral knee-dominant pressing. Squat and leg press are the same pattern. */
+export const BILATERAL_KNEE_PATTERNS: RegExp = /leg press|hack squat/i;
 
 /** Low-priority movements that tend to crowd out abduction work. */
 export const LOW_PRIORITY_PATTERNS: RegExp =
@@ -274,12 +291,15 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // 6. Low-priority work crowding out abduction.
-  const lowPrioritySets = setsMatching(LOW_PRIORITY_PATTERNS);
-  if (lowPrioritySets > 0 && abductionSets < 6) {
+  // 6. Low-priority work. These serve no part of the goal, so any slot they
+  //    occupy is a slot a hamstring curl or glute movement should have had.
+  const lowPriority = all.filter(({ ex }) => LOW_PRIORITY_PATTERNS.test(ex.name || ''));
+  if (lowPriority.length > 0) {
+    const names = lowPriority.map(({ ex }) => `"${ex.name}"`).join(', ');
     warnings.push({
       severity: 'medium',
-      message: `${lowPrioritySets} sets go to calf raises / leg extensions while hip abduction is under-dosed. Swap those slots for abduction work.`,
+      day: lowPriority[0].dayName,
+      message: `${names} does not serve the goal and is taking a slot. Replace it with a hamstring curl or a second glute movement.`,
     });
   }
 
@@ -297,12 +317,35 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // 8. Glute volume floor.
+  // 8. Glute max volume floor. This is the primary target muscle.
   const gluteSets = setsMatching(GLUTE_PATTERNS);
-  if (gluteSets < 8) {
+  if (gluteSets < 10) {
+    warnings.push({
+      severity: 'high',
+      message: `Only ${gluteSets} sets of glute max work per week. This is the primary target — get it to 10-16 sets.`,
+    });
+  }
+
+  // 8b. Priority inversion. Glute medius is smaller and needs less volume than
+  //     glute max; when it outranks it, the emphasis has been over-applied.
+  if (abductionSets > 9 && abductionSets >= gluteSets) {
+    warnings.push({
+      severity: 'high',
+      message: `Hip abduction (${abductionSets} sets) has more volume than glute max (${gluteSets} sets). That inverts the priority — glute medius is the smaller muscle and 6-9 sets covers it. Move the surplus into hip thrusts or a second glute max movement.`,
+    });
+  } else if (abductionSets > 9) {
     warnings.push({
       severity: 'medium',
-      message: `Only ${gluteSets} sets of glute work per week. Target 10-16 sets for meaningful growth.`,
+      message: `${abductionSets} sets of hip abduction per week is above the 6-9 target. More is not better here, and it crowds out glute max work.`,
+    });
+  }
+
+  // 8c. Hamstring floor. A single RDL does not cover the muscle.
+  const hamstringSets = setsMatching(HAMSTRING_PATTERNS);
+  if (hamstringSets < 6) {
+    warnings.push({
+      severity: 'medium',
+      message: `Only ${hamstringSets} sets of hamstring work per week. Add a leg curl — a Romanian deadlift alone leaves the knee-flexion function untrained.`,
     });
   }
 
@@ -352,6 +395,21 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
+  // 12b. Squat and leg press are the same bilateral knee-dominant pattern, and
+  //      the leg press contributes less to the hips.
+  const hasSquat = all.some(
+    ({ ex }) => /squat/i.test(ex.name || '') && !QUAD_EXEMPT_PATTERNS.test(ex.name || '')
+  );
+  const legPress = all.find(({ ex }) => BILATERAL_KNEE_PATTERNS.test(ex.name || ''));
+  if (hasSquat && legPress) {
+    warnings.push({
+      severity: 'medium',
+      exercise: legPress.ex.name,
+      day: legPress.dayName,
+      message: `"${legPress.ex.name}" repeats the squat pattern already in the program and does less for the hips. Use the slot for a hamstring curl or single-leg glute work.`,
+    });
+  }
+
   // 13. Overlapping quad movements in one day, when quads are not the priority.
   for (const day of days) {
     const quadWork = (day.exercises || []).filter(
@@ -391,9 +449,18 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
 export function applyProgramDefaults<T extends { generalNotes?: string[] }>(routine: T): T {
   const notes = Array.isArray(routine.generalNotes) ? [...routine.generalNotes] : [];
 
-  // Drop the vague placeholder the model reliably emits.
-  const vague = /adjust weights?.*(based on|according to).*(progress|comfort)/i;
-  const filtered = notes.filter((n) => !vague.test(n));
+  // Drop the vague placeholders the model reliably emits. These read as advice
+  // but contain no instruction the reader can act on, and they dilute the rules
+  // below that do.
+  const vague = [
+    /adjust weights?.*(based on|according to|depending on)/i,
+    /listen to your body/i,
+    /focus on (proper )?form and technique/i,
+    /stay hydrated/i,
+    /(rest|recover) (adequately|as needed|when needed)/i,
+    /consult (a|your) (doctor|physician|professional)/i,
+  ];
+  const filtered = notes.filter((n) => !vague.some((re) => re.test(n)));
 
   if (!filtered.some((n) => /double progression|top of the rep range/i.test(n))) {
     filtered.unshift(PROGRESSION_RULE);
