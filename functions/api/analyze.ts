@@ -70,7 +70,7 @@ Be specific, supportive, and practical. Reference the actual exercises in the da
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 2048,
     stream: true,
-  }) as ReadableStream;
+  }) as unknown as ReadableStream;
 
   // Transform Workers AI SSE stream → plain text stream
   const decoder = new TextDecoder();

@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { Badge } from './ui/badge';
-import { GeneratedRoutine } from '../types/workout';
+import { GeneratedRoutine, RoutineWarning } from '../types/workout';
 import { cn } from '../lib/utils';
 
 const EQUIPMENT_OPTIONS = [
@@ -40,7 +40,7 @@ const FOCUS_AREAS = [
 ];
 
 interface RoutineGeneratorProps {
-  onGenerate: (routine: GeneratedRoutine) => void;
+  onGenerate: (routine: GeneratedRoutine, warnings: RoutineWarning[]) => void;
 }
 
 export function RoutineGenerator({ onGenerate }: RoutineGeneratorProps) {
@@ -102,7 +102,7 @@ export function RoutineGenerator({ onGenerate }: RoutineGeneratorProps) {
         ...data.routine,
       };
 
-      onGenerate(routine);
+      onGenerate(routine, (data.warnings as RoutineWarning[]) ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate routine');
     } finally {

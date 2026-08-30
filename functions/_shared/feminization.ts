@@ -224,6 +224,19 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
+  // A generic "deadlift" drifts quad-dominant and misses the hamstrings.
+  for (const { ex, dayName } of all) {
+    const name = ex.name || '';
+    if (/deadlift/i.test(name) && !/romanian|stiff.?leg|\brdl\b/i.test(name)) {
+      warnings.push({
+        severity: 'medium',
+        exercise: name,
+        day: dayName,
+        message: `"${name}" tends to become quad-dominant. Use a Romanian deadlift instead — hinge at the hip with a soft knee so the hamstrings and glutes take the load.`,
+      });
+    }
+  }
+
   // 5. Shoulder-widening volume.
   const shoulderSets = setsMatching(SHOULDER_WIDENING_PATTERNS);
   if (shoulderSets > 3) {

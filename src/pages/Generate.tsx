@@ -1,23 +1,25 @@
 
 
 import { useState } from 'react';
-import { Sparkles, History, Trash2 } from 'lucide-react';
+import { Sparkles, History, AlertTriangle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { RoutineGenerator } from '../components/RoutineGenerator';
 import { GeneratedRoutine } from '../components/GeneratedRoutine';
 import { RoutineReview } from '../components/RoutineReview';
-import { GeneratedRoutine as GeneratedRoutineType } from '../types/workout';
+import { GeneratedRoutine as GeneratedRoutineType, RoutineWarning } from '../types/workout';
 import { useWorkout } from '../context/WorkoutContext';
 
 export default function GeneratePage() {
   const { generatedRoutines, saveRoutine, deleteRoutine } = useWorkout();
   const [currentRoutine, setCurrentRoutine] = useState<GeneratedRoutineType | null>(null);
+  const [warnings, setWarnings] = useState<RoutineWarning[]>([]);
   const [activeTab, setActiveTab] = useState<string>('generate');
 
-  const handleGenerate = (routine: GeneratedRoutineType) => {
+  const handleGenerate = (routine: GeneratedRoutineType, routineWarnings: RoutineWarning[]) => {
     setCurrentRoutine(routine);
+    setWarnings(routineWarnings);
     setActiveTab('result');
   };
 
@@ -109,10 +111,11 @@ export default function GeneratePage() {
                 <div className="pt-4 border-t">
                   <h4 className="font-medium text-foreground mb-2">Feminization Principles</h4>
                   <ul className="space-y-1">
-                    <li>- 60-70% lower body focus (glutes, legs)</li>
-                    <li>- Higher reps (15-20) for upper body to avoid bulk</li>
-                    <li>- Exercises that build curves and improve posture</li>
-                    <li>- Core work for waist definition</li>
+                    <li>- Hip abduction is the priority: 6-9 sets/week drives hip width</li>
+                    <li>- Glutes and hamstrings loaded heavy (6-10 reps), not high-rep</li>
+                    <li>- Rows and face pulls kept in — posture shapes the torso</li>
+                    <li>- No loaded oblique work; thicker obliques widen the waist</li>
+                    <li>- Size is controlled by set volume, not by lifting lighter</li>
                   </ul>
                 </div>
               </CardContent>
@@ -132,6 +135,37 @@ export default function GeneratePage() {
                   Generate New
                 </Button>
               </div>
+              {warnings.length > 0 && (
+                <Card className="border-amber-500/50 bg-amber-500/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      Fix before you start ({warnings.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {warnings.map((w, i) => (
+                      <div key={i} className="flex gap-2 text-sm">
+                        <span
+                          className={
+                            w.severity === 'high'
+                              ? 'flex-shrink-0 font-semibold text-destructive'
+                              : 'flex-shrink-0 font-semibold text-amber-600'
+                          }
+                        >
+                          {w.severity === 'high' ? 'HIGH' : 'MED'}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {w.day && (
+                            <span className="text-foreground font-medium">{w.day}: </span>
+                          )}
+                          {w.message}
+                        </span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
               <GeneratedRoutine
                 routine={currentRoutine}
                 onSave={handleSave}
