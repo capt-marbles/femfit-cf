@@ -46,7 +46,7 @@ Waist appearance comes from body fat level, from NOT thickening the obliques, an
 
 ## Weekly set targets — count these before finalising
 - Glute max (hip thrust, RDL, split squat, lunge, kickback): 10-16 sets. This is the primary target and must have the most volume of any muscle.
-- Hip abduction / gluteus medius: 6-9 sets. Do NOT exceed 9. It is a smaller muscle and more is not better. Its volume must never exceed glute max volume — if it does, the priority is inverted.
+- Hip abduction / gluteus medius: 6-9 sets, and AT MOST 2 abduction exercises in the entire week (for example one machine or cable abduction, plus one lateral band walk). Three or four different abduction movements is over-programming a small muscle. Its volume must never exceed glute max volume — if it does, the priority is inverted.
 - Hamstrings: 6-10 sets, and a Romanian deadlift alone does not cover it. Include a leg curl so the knee-flexion function is trained.
 - Quads: 6-10 sets.
 - Core (anti-rotation / anti-extension): 6-9 sets across 2+ days.
@@ -329,9 +329,10 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
   // 8b. Priority inversion. Glute medius is smaller and needs less volume than
   //     glute max; when it outranks it, the emphasis has been over-applied.
   if (abductionSets > 9 && abductionSets >= gluteSets) {
+    const relation = abductionSets === gluteSets ? 'as much volume as' : 'more volume than';
     warnings.push({
       severity: 'high',
-      message: `Hip abduction (${abductionSets} sets) has more volume than glute max (${gluteSets} sets). That inverts the priority — glute medius is the smaller muscle and 6-9 sets covers it. Move the surplus into hip thrusts or a second glute max movement.`,
+      message: `Hip abduction (${abductionSets} sets) has ${relation} glute max (${gluteSets} sets). That inverts the priority — glute medius is the smaller muscle and 6-9 sets covers it. Move the surplus into hip thrusts or a second glute max movement.`,
     });
   } else if (abductionSets > 9) {
     warnings.push({
