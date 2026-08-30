@@ -1,0 +1,11 @@
+name = "femfit-cf"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "dist"
+
+[[kv_namespaces]]
+binding = "FEMFIT_KV"
+id = "bb7340ce6cda4320bcce09772d67b8ee"
+preview_id = "38231b2a8cb8452e9cc07e030fdff082"
+
+[ai]
+binding = "AI"
