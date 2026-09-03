@@ -13,6 +13,11 @@ export const TRAINING_PRINCIPLES = `## How muscle actually responds (never viola
 - Hypertrophy is driven by hard sets taken close to failure and by weekly set volume — NOT by how heavy the weight is. "Light weight, high reps to tone" is a myth: a 15-rep set near failure builds as much as an 8-rep set.
 - Therefore, to build a muscle give it MORE sets; to keep a muscle small give it FEWER sets. Never prescribe light weight as a strategy to avoid size.
 
+## Client context
+- Client is 58, returning after six months off. Connective tissue (tendons, ligaments) adapts slower than muscle — this is the primary injury risk. Ramp slowly. Do NOT program to failure.
+- Program all working sets to 1-2 reps in reserve (RIR). Leave 1-2 reps in the tank on every set, every exercise. Never cue "go to failure."
+- Rest 2-3 minutes between sets of compound lifts in the 6-10 rep range (hip thrusts, RDLs, squats, split squats). 60-90 seconds rest is only appropriate for isolation and accessory movements (abduction, curls, face pulls, calf raises).
+
 ## Muscle priorities
 
 BUILD — most of the volume:
@@ -22,18 +27,28 @@ BUILD — most of the volume:
 
 MAINTAIN — moderate volume, real loads, for posture:
 - Horizontal pulling is REQUIRED in every program: rows, face pulls, rear delt work. Upper back strength drives posture, and posture affects how the torso reads more than arm size does. At least one row and one face pull / rear delt movement per week.
-- Lats: moderate only — heavily developed lats broaden the V-taper.
-- One horizontal press (dumbbell bench or machine chest press), 2-3 sets, whenever the program has 6 or more sets of pulling. An all-pull upper body creates a shoulder imbalance over months. This is a joint-health decision, not a masculinising one: frame width comes from delts and traps, not pecs. Keep it horizontal — no overhead pressing.
-- Core: 6-9 sets per week of anti-rotation and anti-extension work (Pallof press, dead bug, bird dog, plank, hollow hold) across at least 2 days. Cutting the oblique work must not take the whole core allocation with it.
+- Lat pulldowns: keep these light and do not progress the load. Upper back development should come from rows and face pulls. Heavy lat work widens the V-taper — exactly what this client does not want.
+- One horizontal press (dumbbell bench or machine chest press), 2-3 sets per week. An all-pull upper body creates a shoulder imbalance over months. Keep it horizontal — no overhead pressing or shrugs.
+- Core: minimum 6 sets per week of anti-extension and anti-rotation work ONLY (Pallof press, dead bug, bird dog, plank, hollow hold) across at least 3 days. Never fewer than 3 sessions.
 
 LIMIT — few sets or none:
 - Heavy overhead pressing, lateral raises, upright rows, heavy shrugs. These widen and square the shoulder line.
 - Direct arm work (curls, triceps extensions) is neither feminizing nor de-feminizing — it is simply low value here. At most one arm movement, and only if wanted.
 - Calf raises and leg extensions are low priority. Never let them occupy a slot that hip abduction should have.
 
-AVOID ENTIRELY:
-- Loaded rotation and side flexion: weighted Russian twists, side bends, weighted oblique crunches, heavy woodchoppers. Obliques hypertrophy like any other muscle, and thicker obliques widen the waist — this works directly against the goal.
-- Use anti-rotation and anti-extension core work instead: Pallof press, dead bug, bird dog, plank.
+AVOID ENTIRELY — do not include under any circumstances:
+- Loaded spinal flexion: weighted crunches, weighted sit-ups, hanging leg raises, hanging knee raises, decline sit-ups, ab machine crunches. Spinal flexion under load is unnecessary for core stability and inappropriate for connective tissue return.
+- Loaded rotation and side flexion: Russian twists, side bends, weighted oblique crunches, heavy woodchoppers. Obliques hypertrophy like any other muscle, and thicker obliques widen the waist.
+- Weighted planks. An unweighted plank or dead bug achieves the same anti-extension stimulus without spinal loading.
+- Heavy overhead pressing and shrugs.
+
+## Frequency — key movements must each appear TWICE per week
+Program these across the lower body days so each occurs on two separate days:
+- Hip thrusts (or single-leg hip thrusts): 2 days
+- Romanian deadlifts: 2 days
+- Hip abduction: 2 days
+- One unilateral lower body movement (Bulgarian split squats or step-ups): 2 days
+These are not optional. A single weekly dose of each is insufficient for a returning client rebuilding these patterns.
 
 ## Waist
 Waist appearance comes from body fat level, from NOT thickening the obliques, and from rib/pelvis position. It does not come from ab training volume. Never program "obliques for waist definition".
@@ -49,7 +64,7 @@ Waist appearance comes from body fat level, from NOT thickening the obliques, an
 - Hip abduction / gluteus medius: 6-9 sets, and AT MOST 2 abduction exercises in the entire week (for example one machine or cable abduction, plus one lateral band walk). Three or four different abduction movements is over-programming a small muscle. Its volume must never exceed glute max volume — if it does, the priority is inverted.
 - Hamstrings: 6-10 sets, and a Romanian deadlift alone does not cover it. Include a leg curl so the knee-flexion function is trained.
 - Quads: 6-10 sets.
-- Core (anti-rotation / anti-extension): 6-9 sets across 2+ days.
+- Core (anti-rotation / anti-extension only): 6+ sets across 3+ days.
 - Pulling: 6-9 sets. Horizontal press: 2-3 sets.
 
 ## Redundancy — do not waste slots
@@ -61,7 +76,8 @@ Waist appearance comes from body fat level, from NOT thickening the obliques, an
 
 ## Cardio
 - 2-4 steady-state sessions per week for cardiovascular health and body composition.
-- Never frame cardio as a way to reduce muscle mass — lower body muscle is the entire goal. Keep intensity moderate so it does not interfere with glute recovery.
+- Keep intensity moderate (Zone 2). Excess intensity will interfere with glute recovery and is inappropriate for connective tissue reconditioning.
+- Never frame cardio as a way to reduce muscle mass — lower body muscle is the entire goal.
 
 ## Form cues that change the outcome
 - Prefer Romanian deadlifts over generic "dumbbell deadlifts" — the latter drifts quad-dominant and misses the hamstrings.
@@ -70,8 +86,9 @@ Waist appearance comes from body fat level, from NOT thickening the obliques, an
 
 /** Concrete double-progression rule. Injected into every generated program. */
 export const PROGRESSION_RULE =
-  'Progression: when you complete the TOP of the rep range on all sets with good form, ' +
+  'Progression: when you complete the TOP of the rep range on all sets with 1-2 reps still in the tank, ' +
   'add weight the next session and drop back to the BOTTOM of the range. Repeat. ' +
+  'Never go to failure — leave 1-2 reps in reserve on every set. ' +
   'On hip thrusts and Romanian deadlifts, move up sooner than feels necessary — they stall fast in high-rep ranges.';
 
 export const TECHNIQUE_RULE =
@@ -82,9 +99,12 @@ export const TECHNIQUE_RULE =
 // Exercise policy — used for prompting AND for deterministic validation
 // ---------------------------------------------------------------------------
 
-/** Loaded rotation / side flexion. Thickens obliques, widens the waist. */
+/**
+ * Loaded rotation / side flexion AND loaded spinal flexion.
+ * Thickens obliques, widens the waist, or loads the spine inappropriately.
+ */
 export const AVOID_PATTERNS: RegExp =
-  /russian twist|side bend|oblique crunch|woodchop|wood chop|landmine twist|weighted twist|side crunch/i;
+  /russian twist|side bend|oblique crunch|woodchop|wood chop|landmine twist|weighted twist|side crunch|weighted crunch|weighted sit.?up|hanging (leg|knee) raise|decline sit.?up|ab machine crunch|weighted plank/i;
 
 /** Widens or squares the shoulder line. Acceptable in small doses, flagged in bulk. */
 export const SHOULDER_WIDENING_PATTERNS: RegExp =
@@ -123,7 +143,7 @@ export const LOW_PRIORITY_PATTERNS: RegExp =
 
 /** Anti-rotation and anti-extension core work — the kind that does not widen. */
 export const CORE_PATTERNS: RegExp =
-  /pallof|dead ?bug|bird ?dog|plank|hollow|ab wheel|ab roll|leg raise|knee raise|suitcase carry|plank/i;
+  /pallof|dead ?bug|bird ?dog|plank|hollow|ab wheel|ab roll|suitcase carry/i;
 
 /**
  * Horizontal pressing. Kept in small doses for shoulder balance against pulling
@@ -131,6 +151,13 @@ export const CORE_PATTERNS: RegExp =
  */
 export const HORIZONTAL_PRESS_PATTERNS: RegExp =
   /bench press|chest press|push.?up|pushup|floor press|pec deck|chest fly|incline press|dumbbell press/i;
+
+/**
+ * Unilateral lower body movements. These bias toward the glutes and
+ * must appear at least twice per week for a returning client.
+ */
+export const UNILATERAL_LOWER_PATTERNS: RegExp =
+  /bulgarian|split squat|step.?up|single.?leg|pistol|lunge/i;
 
 /**
  * Bilateral quad-dominant movements. Unilateral variants (split squat, walking
@@ -143,9 +170,11 @@ export const QUAD_EXEMPT_PATTERNS: RegExp =
 
 /** Compact policy summary for prompts that cannot carry the full principles. */
 export const POLICY_SUMMARY = `Build: hip abduction (6-9 sets/wk), glutes, hamstrings, quads.
-Maintain for posture: rows, face pulls, rear delts — always include pulling.
+Maintain for posture: rows, face pulls, rear delts — always include pulling. Lat pulldowns: keep light, no progression.
 Limit: overhead pressing, lateral raises, upright rows, shrugs, direct arm work, calf raises, leg extensions.
-Avoid entirely: weighted Russian twists, side bends, weighted oblique crunches — loaded oblique work widens the waist. Use Pallof press / dead bug / plank instead.
+Avoid entirely: weighted Russian twists, side bends, weighted oblique crunches — loaded oblique work widens the waist. Also banned: weighted crunches, hanging leg raises, weighted planks (spinal flexion under load). Use Pallof press / dead bug / plank instead.
+Frequency: hip thrusts, RDLs, hip abduction, and one unilateral movement must each appear on 2 separate days per week.
+RIR: program all sets to 1-2 reps in reserve. Never cue failure.
 Never justify an exercise with "light weight to avoid bulk" — volume controls size, not load.`;
 
 // ---------------------------------------------------------------------------
@@ -205,23 +234,26 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
       .filter(({ ex }) => pattern.test(ex.name || ''))
       .reduce((sum, { ex }) => sum + (ex.sets || 0), 0);
 
-  // 1. Loaded oblique work — works directly against the goal.
+  const daysContaining = (pattern: RegExp) =>
+    days.filter((d) =>
+      (d.exercises || []).some((ex) => pattern.test(ex.name || ''))
+    ).length;
+
+  // 1. Loaded oblique work, spinal flexion, and banned core movements.
   for (const { ex, dayName } of all) {
     if (AVOID_PATTERNS.test(ex.name || '')) {
       warnings.push({
         severity: 'high',
         exercise: ex.name,
         day: dayName,
-        message: `"${ex.name}" is loaded oblique work, which thickens the waist. Replace it with a Pallof press or dead bugs for the same anti-rotation strength without the width.`,
+        message: `"${ex.name}" is banned from this program. Replace it with a Pallof press, dead bug, or bird dog — same anti-rotation stimulus without loading the spine or thickening the obliques.`,
       });
     }
   }
 
   // 2. Gluteus medius volume — the highest-leverage muscle for hip width.
   const abductionSets = setsMatching(ABDUCTION_PATTERNS);
-  const abductionDays = days.filter((d) =>
-    (d.exercises || []).some((ex) => ABDUCTION_PATTERNS.test(ex.name || ''))
-  ).length;
+  const abductionDays = daysContaining(ABDUCTION_PATTERNS);
 
   if (abductionSets === 0) {
     warnings.push({
@@ -242,7 +274,6 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
   }
 
   // 3. Horizontal pulling — posture affects torso shape more than arm size.
-  // An upright row matches /row/ but is a shoulder-widener, not postural pulling.
   const postualPullSets = all
     .filter(({ ex }) => PULL_PATTERNS.test(ex.name || '') && !/upright row/i.test(ex.name || ''))
     .reduce((sum, { ex }) => sum + (ex.sets || 0), 0);
@@ -269,7 +300,32 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // A generic "deadlift" drifts quad-dominant and misses the hamstrings.
+  // 4b. Key movements must each appear on 2 separate days.
+  const thrustDays = daysContaining(THRUST_PATTERNS);
+  if (thrustDays === 1 && setsMatching(THRUST_PATTERNS) > 0) {
+    warnings.push({
+      severity: 'medium',
+      message: 'Hip thrusts appear on only 1 day. Program them on 2 separate lower body days — a single weekly dose is insufficient for a returning client rebuilding this pattern.',
+    });
+  }
+
+  const hingeDays = daysContaining(HINGE_PATTERNS);
+  if (hingeDays === 1 && setsMatching(HINGE_PATTERNS) > 0) {
+    warnings.push({
+      severity: 'medium',
+      message: 'Romanian deadlifts appear on only 1 day. Program them on 2 separate lower body days.',
+    });
+  }
+
+  const unilateralDays = daysContaining(UNILATERAL_LOWER_PATTERNS);
+  if (unilateralDays < 2) {
+    warnings.push({
+      severity: 'medium',
+      message: `Unilateral lower body work (Bulgarians, step-ups, lunges) appears on only ${unilateralDays} day${unilateralDays === 1 ? '' : 's'}. Program one unilateral movement on 2 separate days — it shifts load toward the glutes and is critical for single-leg stability.`,
+    });
+  }
+
+  // A generic "deadlift" drifts quad-dominant.
   for (const { ex, dayName } of all) {
     const name = ex.name || '';
     if (/deadlift/i.test(name) && !/romanian|stiff.?leg|\brdl\b/i.test(name)) {
@@ -291,8 +347,7 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // 6. Low-priority work. These serve no part of the goal, so any slot they
-  //    occupy is a slot a hamstring curl or glute movement should have had.
+  // 6. Low-priority work.
   const lowPriority = all.filter(({ ex }) => LOW_PRIORITY_PATTERNS.test(ex.name || ''));
   if (lowPriority.length > 0) {
     const names = lowPriority.map(({ ex }) => `"${ex.name}"`).join(', ');
@@ -317,7 +372,7 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // 8. Glute max volume floor. This is the primary target muscle.
+  // 8. Glute max volume floor.
   const gluteSets = setsMatching(GLUTE_PATTERNS);
   if (gluteSets < 10) {
     warnings.push({
@@ -326,8 +381,7 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // 8b. Priority inversion. Glute medius is smaller and needs less volume than
-  //     glute max; when it outranks it, the emphasis has been over-applied.
+  // 8b. Priority inversion.
   if (abductionSets > 9 && abductionSets >= gluteSets) {
     const relation = abductionSets === gluteSets ? 'as much volume as' : 'more volume than';
     warnings.push({
@@ -341,7 +395,7 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // 8c. Hamstring floor. A single RDL does not cover the muscle.
+  // 8c. Hamstring floor.
   const hamstringSets = setsMatching(HAMSTRING_PATTERNS);
   if (hamstringSets < 6) {
     warnings.push({
@@ -350,19 +404,24 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // 9. Core volume floor. Core definition is a stated goal, and trimming the
-  //    oblique work must not take the whole core allocation with it.
+  // 9. Core volume and frequency floor.
   const coreSets = setsMatching(CORE_PATTERNS);
+  const coreDays = daysContaining(CORE_PATTERNS);
+
   if (coreSets < 6) {
     warnings.push({
       severity: 'medium',
-      message: `Only ${coreSets} sets of core work per week. Add a second core slot — dead bugs or hollow holds — on another day. Six sets is a reasonable floor.`,
+      message: `Only ${coreSets} sets of core work per week. Target 6+ sets of anti-extension / anti-rotation work (dead bugs, bird dogs, Pallof press, planks). No loaded flexion.`,
+    });
+  }
+  if (coreDays < 3) {
+    warnings.push({
+      severity: 'medium',
+      message: `Core work appears on only ${coreDays} day${coreDays === 1 ? '' : 's'}. It must appear in at least 3 of the training sessions — frequency matters more than per-session volume for core stability.`,
     });
   }
 
-  // 10. Push/pull balance. All-pull programming causes shoulder problems over
-  //     months. A horizontal press is a joint-health choice, not a masculinising
-  //     one — the width being avoided comes from delts and traps, not pecs.
+  // 10. Push/pull balance.
   const pressSets = setsMatching(HORIZONTAL_PRESS_PATTERNS);
   if (postualPullSets >= 6 && pressSets === 0) {
     warnings.push({
@@ -371,8 +430,7 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // 11. More than one heavily loaded hinge per week is a lot of lower back
-  //     fatigue, and the second one rarely adds anything the first missed.
+  // 11. More than one heavily loaded hinge per week.
   const heavyHinges = all.filter(
     ({ ex }) => HINGE_PATTERNS.test(ex.name || '') && lowestRep(ex.reps) <= 10
   );
@@ -380,11 +438,11 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     const names = heavyHinges.map(({ ex }) => `"${ex.name}"`).join(' and ');
     warnings.push({
       severity: 'medium',
-      message: `Two heavy hinge movements in one week (${names}). That is a lot of lower back fatigue and they overlap heavily. Keep one — replace the other with a hamstring curl, or use a trap bar if you want the loading pattern.`,
+      message: `Two heavy hinge movements in one week (${names}). That is a lot of lower back fatigue and they overlap heavily. Keep one — replace the other with a hamstring curl.`,
     });
   }
 
-  // 12. Hip thrust and glute bridge are the same pattern; the bridge loads less.
+  // 12. Hip thrust and glute bridge duplication.
   const hasThrust = all.some(({ ex }) => /hip thrust/i.test(ex.name || ''));
   const bridge = all.find(({ ex }) => /glute bridge|frog pump/i.test(ex.name || ''));
   if (hasThrust && bridge) {
@@ -396,8 +454,7 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // 12b. Squat and leg press are the same bilateral knee-dominant pattern, and
-  //      the leg press contributes less to the hips.
+  // 12b. Squat and leg press duplication.
   const hasSquat = all.some(
     ({ ex }) => /squat/i.test(ex.name || '') && !QUAD_EXEMPT_PATTERNS.test(ex.name || '')
   );
@@ -411,7 +468,7 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
     });
   }
 
-  // 13. Overlapping quad movements in one day, when quads are not the priority.
+  // 13. Overlapping quad movements in one day.
   for (const day of days) {
     const quadWork = (day.exercises || []).filter(
       (ex) =>
@@ -450,9 +507,6 @@ export function validateRoutine(routine: ValidatableRoutine): RoutineWarning[] {
 export function applyProgramDefaults<T extends { generalNotes?: string[] }>(routine: T): T {
   const notes = Array.isArray(routine.generalNotes) ? [...routine.generalNotes] : [];
 
-  // Drop the vague placeholders the model reliably emits. These read as advice
-  // but contain no instruction the reader can act on, and they dilute the rules
-  // below that do.
   const vague = [
     /adjust weights?.*(based on|according to|depending on)/i,
     /listen to your body/i,

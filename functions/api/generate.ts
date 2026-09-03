@@ -54,6 +54,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
 Client Profile:
 - Experience level: ${options.experienceLevel}
+- Age: 58, returning after six months off. Connective tissue adapts slower than muscle — do NOT program to failure.
 - Available equipment: ${equipmentList}
 ${focusAreasText}
 ${limitationsText}
@@ -64,11 +65,39 @@ ${TRAINING_PRINCIPLES}
 - Split: ${daySplitGuidance(options.daysPerWeek)}
 - ${exercisesPerDay(options.experienceLevel)} main exercises per day.
 - Every day gets a warmup (3-5 dynamic movements) and a cooldown (3-5 static stretches, hip-focused).
-- Include a weekly cardio plan of 2-4 steady-state sessions.
-- The upper body day must contain a row, a face pull or rear delt movement, and one horizontal press for shoulder balance. At most one arm exercise, and only after those.
-- Hip abduction must appear on at least 2 different days.
-- Core work must appear on at least 2 different days.
-- Before finalising, check the whole week for redundancy: only one heavy hinge, never both a hip thrust and a glute bridge, no more than 2 bilateral quad movements in a day.
+- Include a weekly cardio plan of 2-4 steady-state sessions, Zone 2 intensity only.
+- The upper body day must contain a row, a face pull or rear delt movement, and one horizontal press for shoulder balance. At most one arm exercise, and only after those. No overhead pressing.
+
+## Frequency requirements — non-negotiable
+Across the lower body days, each of the following must appear on TWO SEPARATE DAYS:
+1. Hip thrusts (or single-leg hip thrusts)
+2. Romanian deadlifts
+3. Hip abduction
+4. One unilateral lower body movement (Bulgarian split squats OR step-ups — pick one, use it twice)
+Core work must appear in at least 3 of the ${options.daysPerWeek} sessions.
+
+## Rest periods — write these explicitly in the "notes" field for every exercise
+- Compound lifts in the 6-10 rep range (hip thrusts, RDLs, squats, split squats): rest 2-3 minutes between sets.
+- Isolation and accessory work (abduction, face pulls, rows, curls): rest 60-90 seconds between sets.
+- Write the rest period in every exercise's "notes" field — the client will be looking at this page at the gym.
+
+## RIR — write this in every exercise's "notes" field
+Every set should leave 1-2 reps in reserve. Never go to failure. Write "Leave 1-2 reps in the tank" in the notes of every exercise.
+
+## Banned exercises — do not include under any circumstances
+- No weighted crunches, hanging leg raises, hanging knee raises, decline sit-ups, or ab machine crunches (spinal flexion under load).
+- No weighted planks.
+- No Russian twists, side bends, woodchoppers, or any loaded rotation.
+- No overhead pressing, shrugs, or upright rows.
+- No calf raises or leg extensions.
+
+## Before finalising, check
+- Only one heavy hinge in the week (not two RDLs, not RDL + conventional deadlift).
+- Never both a hip thrust and a glute bridge in the same week.
+- No more than 2 bilateral quad movements in any single day.
+- Hip thrusts on 2 days, RDLs on 2 days, abduction on 2 days, unilateral work on 2 days.
+- Core in at least 3 sessions.
+- AT MOST 2 abduction exercises in the whole week.
 
 ## Writing the feminizationNote field
 Explain the actual mechanism — which muscle this specific movement develops and why that serves the goal. Never write "lighter weights to avoid bulk" or "toning"; that reasoning is false. If an exercise is included for posture or joint health rather than shape, say so plainly.
