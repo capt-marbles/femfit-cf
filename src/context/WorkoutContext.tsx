@@ -136,6 +136,28 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     }, 1000);
   }, []);
 
+  // Persist measurements, goals and settings whenever they change.
+  // isLoading guard prevents a spurious save on the initial hydration pass.
+  const measurementSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (isLoading) return;
+    if (measurementSaveTimerRef.current) clearTimeout(measurementSaveTimerRef.current);
+    measurementSaveTimerRef.current = setTimeout(() => {
+      loadWorkoutData().then((current) => {
+        saveWorkoutData({
+          ...current,
+          measurements,
+          measurementGoals: measurementGoals || undefined,
+          measurementSettings,
+          lastUpdated: new Date().toISOString(),
+        }).then(() => {
+          setLastUpdated(new Date());
+          setHasStoredData(true);
+        });
+      });
+    }, 1000);
+  }, [measurements, measurementGoals, measurementSettings, isLoading]);
+
   const processData = useCallback(
     (mapping: ColumnMapping) => {
       if (!parsedData) return;
