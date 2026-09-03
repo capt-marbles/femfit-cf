@@ -1,7 +1,5 @@
-
-
 import { useState, useMemo } from 'react';
-import { Dumbbell, Save, Check, ChevronRight, Sparkles } from 'lucide-react';
+import { Dumbbell, Save, Check, ChevronRight, Sparkles, Flame, Wind } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -19,6 +17,9 @@ import {
   GeneratedRoutine,
   LoggedSet,
   WorkoutSession,
+  WarmupRoutine,
+  CooldownRoutine,
+  StretchExercise,
 } from '../types/workout';
 
 interface SetInput {
@@ -33,6 +34,94 @@ function todayISO(): string {
   return new Date(now.getTime() - tz).toISOString().slice(0, 10);
 }
 
+function parseRepRange(reps: string): string {
+  // Return just the target string for use as a placeholder, e.g. "8-12"
+  return reps?.trim() || '';
+}
+
+function getWarmupExercises(warmup: string | WarmupRoutine | undefined): StretchExercise[] {
+  if (!warmup || typeof warmup === 'string') return [];
+  return warmup.exercises || [];
+}
+
+function getCooldownStretches(cooldown: string | CooldownRoutine | undefined): StretchExercise[] {
+  if (!cooldown || typeof cooldown === 'string') return [];
+  return cooldown.stretches || [];
+}
+
+interface ChecklistSectionProps {
+  title: string;
+  icon: React.ReactNode;
+  items: StretchExercise[];
+  checked: boolean[];
+  onToggle: (i: number) => void;
+  emptyLabel?: string;
+}
+
+function ChecklistSection({ title, icon, items, checked, onToggle, emptyLabel }: ChecklistSectionProps) {
+  if (items.length === 0 && !emptyLabel) return null;
+  const doneCount = checked.filter(Boolean).length;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base">
+            {icon}
+            {title}
+          </CardTitle>
+          {items.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {doneCount}/{items.length} done
+            </span>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {items.length === 0 && emptyLabel ? (
+          <p className="text-sm text-muted-foreground">{emptyLabel}</p>
+        ) : (
+          items.map((item, i) => (
+            <label
+              key={i}
+              className={`flex items-start gap-3 p-2 rounded-md cursor-pointer transition-colors ${
+                checked[i] ? 'bg-muted/50' : 'hover:bg-muted/30'
+              }`}
+            >
+              <div className="relative mt-0.5 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={checked[i] || false}
+                  onChange={() => onToggle(i)}
+                />
+                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                  checked[i]
+                    ? 'bg-primary border-primary'
+                    : 'border-muted-foreground/40'
+                }`}>
+                  {checked[i] && <Check className="h-3 w-3 text-primary-foreground" />}
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-sm font-medium ${checked[i] ? 'line-through text-muted-foreground' : ''}`}>
+                    {item.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground flex-shrink-0">{item.duration}</span>
+                </div>
+                {item.instructions && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.instructions}</p>
+                )}
+              </div>
+            </label>
+          ))
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function SessionLogger() {
   const { generatedRoutines, sessions, saveSession } = useWorkout();
 
@@ -40,6 +129,8 @@ export function SessionLogger() {
   const [dayIndex, setDayIndex] = useState<number>(0);
   const [date, setDate] = useState<string>(todayISO());
   const [logs, setLogs] = useState<Record<number, SetInput[]>>({});
+  const [warmupChecked, setWarmupChecked] = useState<boolean[]>([]);
+  const [cooldownChecked, setCooldownChecked] = useState<boolean[]>([]);
   const [notes, setNotes] = useState('');
   const [saved, setSaved] = useState(false);
 
@@ -48,6 +139,9 @@ export function SessionLogger() {
     [generatedRoutines, routineId]
   );
   const day = routine?.days[dayIndex];
+
+  const warmupItems = useMemo(() => getWarmupExercises(day?.warmup), [day]);
+  const cooldownItems = useMemo(() => getCooldownStretches(day?.cooldown), [day]);
 
   // Last logged values per exercise name → smart defaults for fast entry
   const lastByExercise = useMemo(() => {
@@ -81,6 +175,8 @@ export function SessionLogger() {
       });
     });
     setLogs(next);
+    setWarmupChecked(Array(getWarmupExercises(d.warmup).length).fill(false));
+    setCooldownChecked(Array(getCooldownStretches(d.cooldown).length).fill(false));
     setSaved(false);
   };
 
@@ -115,10 +211,7 @@ export function SessionLogger() {
   };
 
   const loggedSetCount = useMemo(
-    () =>
-      Object.values(logs)
-        .flat()
-        .filter((s) => s.reps.trim() !== '').length,
+    () => Object.values(logs).flat().filter((s) => s.reps.trim() !== '').length,
     [logs]
   );
 
@@ -183,6 +276,7 @@ export function SessionLogger() {
 
   return (
     <div className="space-y-4">
+      {/* Session setup */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -192,7 +286,7 @@ export function SessionLogger() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2 sm:col-span-1">
+            <div className="space-y-2">
               <Label>Date</Label>
               <Input
                 type="date"
@@ -201,7 +295,7 @@ export function SessionLogger() {
                 className="min-h-[44px]"
               />
             </div>
-            <div className="space-y-2 sm:col-span-1">
+            <div className="space-y-2">
               <Label>Routine</Label>
               <Select value={routineId} onValueChange={handleRoutineChange}>
                 <SelectTrigger className="w-full min-h-[44px]">
@@ -216,7 +310,7 @@ export function SessionLogger() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 sm:col-span-1">
+            <div className="space-y-2">
               <Label>Day</Label>
               <Select
                 value={String(dayIndex)}
@@ -241,64 +335,101 @@ export function SessionLogger() {
 
       {day && (
         <>
-          {day.exercises.map((ex, exIdx) => (
-            <Card key={exIdx}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-2">
-                  <CardTitle className="text-base">{ex.name}</CardTitle>
-                  <span className="text-xs text-muted-foreground flex-shrink-0">
-                    target {ex.sets} × {ex.reps}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="grid grid-cols-[2rem_1fr_1fr_1fr] gap-2 text-xs text-muted-foreground px-1">
-                  <span>Set</span>
-                  <span>Weight (lb)</span>
-                  <span>Reps</span>
-                  <span>RPE</span>
-                </div>
-                {(logs[exIdx] || []).map((row, setIdx) => (
-                  <div key={setIdx} className="grid grid-cols-[2rem_1fr_1fr_1fr] gap-2 items-center">
-                    <span className="text-sm text-muted-foreground text-center">{setIdx + 1}</span>
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      placeholder="0"
-                      value={row.weight}
-                      onChange={(e) => updateSet(exIdx, setIdx, 'weight', e.target.value)}
-                      className="min-h-[44px]"
-                    />
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      placeholder="0"
-                      value={row.reps}
-                      onChange={(e) => updateSet(exIdx, setIdx, 'reps', e.target.value)}
-                      className="min-h-[44px]"
-                    />
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      placeholder="—"
-                      value={row.rpe}
-                      onChange={(e) => updateSet(exIdx, setIdx, 'rpe', e.target.value)}
-                      className="min-h-[44px]"
-                    />
-                  </div>
-                ))}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => addSet(exIdx)}
-                  className="text-xs text-muted-foreground"
-                >
-                  + Add set
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+          {/* Warmup */}
+          <ChecklistSection
+            title="Warm-up"
+            icon={<Flame className="h-4 w-4 text-orange-500" />}
+            items={warmupItems}
+            checked={warmupChecked}
+            onToggle={(i) => setWarmupChecked((prev) => prev.map((v, idx) => idx === i ? !v : v))}
+            emptyLabel={typeof day.warmup === 'string' ? day.warmup : undefined}
+          />
 
+          {/* Main exercises */}
+          {day.exercises.map((ex, exIdx) => {
+            const targetReps = parseRepRange(ex.reps);
+            return (
+              <Card key={exIdx}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base">{ex.name}</CardTitle>
+                      {ex.feminizationNote && (
+                        <p className="text-xs text-muted-foreground mt-1 max-w-prose">
+                          {ex.feminizationNote}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className="text-sm font-semibold text-primary">
+                        {ex.sets} × {ex.reps}
+                      </span>
+                      {ex.rest && (
+                        <p className="text-xs text-muted-foreground">{ex.rest} rest</p>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="grid grid-cols-[2rem_1fr_1fr_1fr] gap-2 text-xs text-muted-foreground px-1">
+                    <span>#</span>
+                    <span>Weight (lb)</span>
+                    <span>Reps (target: {targetReps})</span>
+                    <span>RPE</span>
+                  </div>
+                  {(logs[exIdx] || []).map((row, setIdx) => (
+                    <div key={setIdx} className="grid grid-cols-[2rem_1fr_1fr_1fr] gap-2 items-center">
+                      <span className="text-sm text-muted-foreground text-center">{setIdx + 1}</span>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        placeholder="0"
+                        value={row.weight}
+                        onChange={(e) => updateSet(exIdx, setIdx, 'weight', e.target.value)}
+                        className="min-h-[44px]"
+                      />
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        placeholder={targetReps || '0'}
+                        value={row.reps}
+                        onChange={(e) => updateSet(exIdx, setIdx, 'reps', e.target.value)}
+                        className="min-h-[44px]"
+                      />
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        placeholder="—"
+                        value={row.rpe}
+                        onChange={(e) => updateSet(exIdx, setIdx, 'rpe', e.target.value)}
+                        className="min-h-[44px]"
+                      />
+                    </div>
+                  ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => addSet(exIdx)}
+                    className="text-xs text-muted-foreground"
+                  >
+                    + Add set
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+
+          {/* Cooldown */}
+          <ChecklistSection
+            title="Cool-down & Stretches"
+            icon={<Wind className="h-4 w-4 text-blue-500" />}
+            items={cooldownItems}
+            checked={cooldownChecked}
+            onToggle={(i) => setCooldownChecked((prev) => prev.map((v, idx) => idx === i ? !v : v))}
+            emptyLabel={typeof day.cooldown === 'string' ? day.cooldown : undefined}
+          />
+
+          {/* Save */}
           <Card>
             <CardContent className="py-4 space-y-4">
               <div className="space-y-2">
