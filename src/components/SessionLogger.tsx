@@ -354,8 +354,13 @@ export function SessionLogger() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <CardTitle className="text-base">{ex.name}</CardTitle>
-                      {ex.feminizationNote && (
+                      {ex.notes && (
                         <p className="text-xs text-muted-foreground mt-1 max-w-prose">
+                          {ex.notes}
+                        </p>
+                      )}
+                      {ex.feminizationNote && (
+                        <p className="text-xs text-muted-foreground/70 mt-1 max-w-prose italic">
                           {ex.feminizationNote}
                         </p>
                       )}
