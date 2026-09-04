@@ -84,6 +84,10 @@ Core work must appear in at least 3 of the ${options.daysPerWeek} sessions.
 ## RIR — write this in every exercise's "notes" field
 Every set should leave 1-2 reps in reserve. Never go to failure. Write "Leave 1-2 reps in the tank" in the notes of every exercise.
 
+## Exercise-specific rules for this client
+- If programming good mornings, use SEATED good mornings only. Standing good mornings are banned — too much lumbar shear for a returning 58-year-old.
+- Bulgarian split squats: bodyweight only. Write "Bodyweight only — add load only once depth and knee tracking are solid (typically 2-4 weeks)" in the notes field.
+
 ## Banned exercises — do not include under any circumstances
 - No weighted crunches, hanging leg raises, hanging knee raises, decline sit-ups, or ab machine crunches (spinal flexion under load).
 - No weighted planks.

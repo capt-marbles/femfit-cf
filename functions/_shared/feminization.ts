@@ -82,7 +82,9 @@ Waist appearance comes from body fat level, from NOT thickening the obliques, an
 ## Form cues that change the outcome
 - Prefer Romanian deadlifts over generic "dumbbell deadlifts" — the latter drifts quad-dominant and misses the hamstrings.
 - Romanian deadlift: hinge at the hip, soft knee, weight tracking close to the legs. Felt in the hamstrings, not the lower back.
-- Hip thrust: posterior pelvic tilt at the top, chin tucked, ribs down. If the glutes are not contracting, the load is irrelevant.`;
+- Hip thrust: posterior pelvic tilt at the top, chin tucked, ribs down. If the glutes are not contracting, the load is irrelevant.
+- Good mornings: always use the SEATED variation for this client. Standing good mornings place shear load on the lumbar spine under a bar — inappropriate for a 58-year-old returning from six months off. Seated good mornings provide the same hamstring lengthening stimulus with the spine supported.
+- Bulgarian split squats: bodyweight only until form is fully established (typically 2-4 weeks). Add load only once the client can control depth, knee tracking, and hip position without compensation. Note this explicitly in the exercise's notes field.`;
 
 /** Concrete double-progression rule. Injected into every generated program. */
 export const PROGRESSION_RULE =
