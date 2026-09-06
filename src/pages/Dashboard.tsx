@@ -193,6 +193,27 @@ export default function DashboardPage() {
                 </Link>
               </Button>
             </div>
+
+            {/* Skipping a day? Every other day is one tap away. */}
+            {routine.days.length > 1 && (
+              <div className="mt-4 pt-3 border-t border-primary/15">
+                <p className="text-xs text-muted-foreground mb-2">Or start a different day</p>
+                <div className="flex flex-wrap gap-2">
+                  {routine.days.map((d, i) =>
+                    i === next.dayIndex ? null : (
+                      <Link
+                        key={i}
+                        to={`/log?routine=${encodeURIComponent(routine.id)}&day=${i}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-full border border-border bg-background text-sm hover:border-primary hover:text-primary transition-colors"
+                      >
+                        <span className="font-medium">{d.name}</span>
+                        {d.focus && <span className="text-xs text-muted-foreground hidden sm:inline">· {d.focus}</span>}
+                      </Link>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
