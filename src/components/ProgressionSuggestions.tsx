@@ -28,8 +28,8 @@ const ACTION_META: Record<
 
 const CATEGORY_META: Record<ProgressionCategory, { label: string; className: string }> = {
   lower: { label: 'Lower body — build', className: 'text-primary' },
-  upper: { label: 'Upper body — maintain', className: 'text-amber-600' },
-  core: { label: 'Core — posture', className: 'text-blue-600' },
+  upper: { label: 'Upper body — posture', className: 'text-amber-600' },
+  core: { label: 'Core — stability', className: 'text-blue-600' },
   cardio: { label: 'Cardio', className: 'text-red-600' },
 };
 
@@ -66,10 +66,11 @@ export function ProgressionSuggestions() {
       <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/5 border border-primary/20 text-sm">
         <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
         <p className="text-muted-foreground">
-          Progression here is <span className="font-medium text-foreground">asymmetric</span>: push
-          load on <span className="font-medium text-foreground">lower body</span> to build glutes and
-          legs, while <span className="font-medium text-foreground">upper body</span> is held at high
-          reps to maintain without bulk. Targets come from your logged sets.
+          Double progression on everything: hit the top of the rep range with 1-2 in reserve, add
+          weight, drop to the bottom. <span className="font-medium text-foreground">Lower body</span> adds
+          5 lb; <span className="font-medium text-foreground">upper body</span> adds 2.5 lb. Muscle size
+          is set by how many sets are in your program, not by capping the weight. Lat pulldowns and
+          shoulder-wideners are the only lifts held flat. Core stays bodyweight.
         </p>
       </div>
 

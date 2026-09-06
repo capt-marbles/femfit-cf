@@ -3,53 +3,38 @@ import { StoredWorkoutData, GeneratedRoutine, WorkoutSession } from '../types/wo
 const KV_API = '/api/data';
 
 const EMPTY: StoredWorkoutData = {
-  program: null,
-  workouts: [],
-  stats: null,
-  muscleData: [],
   generatedRoutines: [],
   sessions: [],
   measurements: [],
   lastUpdated: new Date().toISOString(),
 };
 
-function deserializeDates(data: StoredWorkoutData): StoredWorkoutData {
+/**
+ * Rebuilds Date objects from JSON and drops the upload-era fields (program,
+ * workouts, stats, muscleData) that older KV blobs still carry, so the next
+ * save writes a clean record.
+ */
+function deserialize(raw: Record<string, unknown>): StoredWorkoutData {
+  const routines = Array.isArray(raw.generatedRoutines) ? raw.generatedRoutines : [];
+  const sessions = Array.isArray(raw.sessions) ? raw.sessions : [];
+  const measurements = Array.isArray(raw.measurements) ? raw.measurements : [];
+
   return {
-    ...data,
-    program: data.program
-      ? {
-          ...data.program,
-          createdAt: new Date(data.program.createdAt),
-          updatedAt: new Date(data.program.updatedAt),
-          days: data.program.days.map((d) => ({
-            ...d,
-            uploadedAt: new Date(d.uploadedAt),
-            entries: d.entries.map((e) => ({ ...e, date: new Date(e.date) })),
-          })),
-        }
-      : null,
-    workouts: data.workouts.map((e) => ({ ...e, date: new Date(e.date) })),
-    stats: data.stats
-      ? {
-          ...data.stats,
-          dateRange: {
-            start: new Date(data.stats.dateRange.start),
-            end: new Date(data.stats.dateRange.end),
-          },
-        }
-      : null,
-    generatedRoutines: data.generatedRoutines.map((r) => ({
+    generatedRoutines: (routines as GeneratedRoutine[]).map((r) => ({
       ...r,
       createdAt: new Date(r.createdAt),
     })),
-    sessions: (data.sessions || []).map((s) => ({
+    sessions: (sessions as WorkoutSession[]).map((s) => ({
       ...s,
       date: new Date(s.date),
     })),
-    measurements: (data.measurements || []).map((m) => ({
+    measurements: (measurements as StoredWorkoutData['measurements']).map((m) => ({
       ...m,
       date: new Date(m.date),
     })),
+    measurementGoals: raw.measurementGoals as StoredWorkoutData['measurementGoals'],
+    measurementSettings: raw.measurementSettings as StoredWorkoutData['measurementSettings'],
+    lastUpdated: typeof raw.lastUpdated === 'string' ? raw.lastUpdated : EMPTY.lastUpdated,
   };
 }
 
@@ -57,8 +42,8 @@ export async function loadWorkoutData(): Promise<StoredWorkoutData> {
   try {
     const res = await fetch(KV_API);
     if (!res.ok) return { ...EMPTY };
-    const json = await res.json() as StoredWorkoutData;
-    return deserializeDates(json);
+    const json = await res.json() as Record<string, unknown>;
+    return deserialize(json);
   } catch {
     return { ...EMPTY };
   }
@@ -92,7 +77,7 @@ export async function deleteGeneratedRoutine(routineId: string): Promise<void> {
 
 export async function saveSession(session: WorkoutSession): Promise<void> {
   const data = await loadWorkoutData();
-  const updated = [session, ...(data.sessions || [])]
+  const updated = [session, ...data.sessions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 200);
   await saveWorkoutData({ ...data, sessions: updated });
@@ -102,6 +87,6 @@ export async function deleteSession(sessionId: string): Promise<void> {
   const data = await loadWorkoutData();
   await saveWorkoutData({
     ...data,
-    sessions: (data.sessions || []).filter((s) => s.id !== sessionId),
+    sessions: data.sessions.filter((s) => s.id !== sessionId),
   });
 }

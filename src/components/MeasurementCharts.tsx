@@ -112,8 +112,8 @@ export function WeightChart() {
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
+              backgroundColor: 'var(--card)',
+              border: '1px solid var(--border)',
               borderRadius: '8px',
             }}
             formatter={(value) => [`${value} ${unit}`, 'Weight']}
@@ -176,8 +176,8 @@ export function BodyMeasurementsChart() {
           <YAxis tick={{ fontSize: 11 }} />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
+              backgroundColor: 'var(--card)',
+              border: '1px solid var(--border)',
               borderRadius: '8px',
             }}
             formatter={(value, name) => [`${value} ${unit}`, name]}
@@ -384,8 +384,8 @@ export function GoalProgressChart() {
               <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
+                  backgroundColor: 'var(--card)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
                 }}
                 formatter={(value, name, props) => [
@@ -399,7 +399,7 @@ export function GoalProgressChart() {
                   <Cell key={`cell-current-${index}`} fill={entry.color} />
                 ))}
               </Bar>
-              <Bar dataKey="goal" name="Goal" fill="hsl(var(--muted-foreground))" opacity={0.5} radius={[0, 4, 4, 0]} />
+              <Bar dataKey="goal" name="Goal" fill="var(--muted-foreground)" opacity={0.5} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
           <div className="flex justify-center mt-4">

@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Dumbbell, Save, Check, ChevronRight, Sparkles, Flame, Wind } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Label } from './ui/label';
@@ -179,6 +179,25 @@ export function SessionLogger() {
     setCooldownChecked(Array(getCooldownStretches(d.cooldown).length).fill(false));
     setSaved(false);
   };
+
+  // Deep link from the dashboard: /log?routine=<id>&day=<index>. Routines
+  // arrive asynchronously from KV, so wait until the referenced one exists.
+  const [searchParams] = useSearchParams();
+  const initialisedFromUrl = useRef(false);
+  useEffect(() => {
+    if (initialisedFromUrl.current) return;
+    const rid = searchParams.get('routine');
+    if (!rid) return;
+    const r = generatedRoutines.find((x) => x.id === rid);
+    if (!r) return;
+    const requested = parseInt(searchParams.get('day') ?? '0', 10) || 0;
+    const idx = Math.min(Math.max(requested, 0), r.days.length - 1);
+    setRoutineId(rid);
+    setDayIndex(idx);
+    initLogs(r, idx);
+    initialisedFromUrl.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generatedRoutines, searchParams]);
 
   const handleRoutineChange = (id: string) => {
     setRoutineId(id);

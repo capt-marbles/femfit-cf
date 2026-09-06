@@ -10,7 +10,11 @@ import {
 export function categorize(muscleGroup: string | undefined, exerciseName: string): ProgressionCategory {
   const text = `${muscleGroup || ''} ${exerciseName}`.toLowerCase();
 
-  if (/(cardio|run|walk|cycl|row|jog|elliptical|stairmaster|incline)/.test(text)) {
+  // Bare "row" is a back exercise and bare "walk" is usually a band walk
+  // (abduction) — neither may match here, or those movements silently vanish
+  // from progression. Cardio is logged from its own routine block, not here,
+  // so only unambiguous machine/activity names are needed.
+  if (/(cardio|rowing machine|rower|cycling|elliptical|stairmaster|treadmill|jogging|running)/.test(text)) {
     return 'cardio';
   }
   if (/(glute|quad|hamstring|ham\b|leg|calf|calves|hip|thigh|lunge|squat|deadlift|bridge|thrust|abduct|adduct|kickback|step[- ]?up)/.test(text)) {
@@ -38,7 +42,7 @@ function roundToIncrement(weight: number, increment = 2.5): number {
 }
 
 // Most common weight in a set of sets ("working weight"); ties break to the heaviest.
-function workingWeight(weights: number[]): number {
+export function workingWeight(weights: number[]): number {
   if (weights.length === 0) return 0;
   const freq = new Map<number, number>();
   for (const w of weights) freq.set(w, (freq.get(w) || 0) + 1);
@@ -166,34 +170,60 @@ export function getProgressionSuggestions(sessions: WorkoutSession[]): Progressi
     }
 
     if (category === 'upper') {
-      // Goal is maintenance without bulk — cap load, keep reps high.
-      if (weight > 0 && allHitMax) {
-        out.push({
-          ...base,
-          action: 'increase-reps',
-          suggestedWeight: weight,
-          suggestedReps: `${Math.max(range.max, 18)}`,
-          rationale: `Upper body is maintenance, not growth. Hold ${weight} lb and keep reps high (${Math.max(range.max, 18)}+) — adding weight here risks bulk.`,
-        });
-      } else {
+      // Muscle size is controlled by weekly set count, not by capping load —
+      // that is set in the program, not here. Upper body progresses normally
+      // so posture work actually gets stronger. Two exceptions are held flat:
+      // lat pulldowns (lats widen the upper back) and anything that widens the
+      // shoulder line.
+      const holdFlat = /pulldown|pull down|lat pull|shrug|lateral raise|side raise|upright row|overhead press|shoulder press/i.test(hist.name);
+
+      if (holdFlat) {
         out.push({
           ...base,
           action: 'hold',
           suggestedWeight: weight,
           suggestedReps: base.targetReps,
-          rationale: `Hold ${weight} lb at high reps. For a feminine line, keep upper-body load flat rather than progressing it.`,
+          rationale: /pulldown|pull down|lat pull/i.test(hist.name)
+            ? `Keep lat pulldowns light and don't progress them — lats widen the upper back. Upper-back strength should come from rows and face pulls.`
+            : `This movement widens the shoulder line. Hold the load; it shouldn't be a progression target.`,
+        });
+      } else if (allHitMax) {
+        const next = roundToIncrement(weight + 2.5);
+        out.push({
+          ...base,
+          action: 'increase-weight',
+          suggestedWeight: next,
+          suggestedReps: `${range.min}`,
+          rationale: `All sets hit ${range.max}. Add load to ${next} lb and reset to ${range.min} reps. Rows and face pulls need to get stronger for posture — size is governed by how many sets are in the program, not by the weight on the bar.`,
+        });
+      } else if (belowMin && prevBelowMin) {
+        const next = roundToIncrement(weight * 0.9);
+        out.push({
+          ...base,
+          action: 'deload',
+          suggestedWeight: next,
+          suggestedReps: `${range.min}-${range.max}`,
+          rationale: `Missed the bottom of the range two sessions running. Deload to ${next} lb and rebuild clean reps.`,
+        });
+      } else {
+        out.push({
+          ...base,
+          action: 'increase-reps',
+          suggestedWeight: weight,
+          suggestedReps: `${range.max}`,
+          rationale: `Stay at ${weight} lb and work toward ${range.max} reps on every set with 1-2 in reserve.`,
         });
       }
       continue;
     }
 
-    // Core — stability & posture, not load.
+    // Core — anti-extension / anti-rotation, bodyweight or light band only.
     out.push({
       ...base,
       action: 'maintain',
       suggestedWeight: weight,
       suggestedReps: base.targetReps,
-      rationale: `Core work is for posture and control. Focus on clean, controlled reps rather than adding load.`,
+      rationale: `Core work stays bodyweight or light band. Progress by slowing the tempo or lengthening the hold, not by adding load.`,
     });
   }
 

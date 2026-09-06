@@ -1,14 +1,3 @@
-export interface WorkoutEntry {
-  id: string;
-  date: Date;
-  exercise: string;
-  sets: number;
-  reps: number;
-  weight: number;
-  muscleGroup?: MuscleGroup;
-  notes?: string;
-}
-
 export type MuscleGroup =
   | 'chest'
   | 'back'
@@ -22,77 +11,6 @@ export type MuscleGroup =
   | 'hamstrings'
   | 'calves'
   | 'cardio';
-
-export interface MuscleGroupData {
-  muscleGroup: MuscleGroup;
-  label: string;
-  volume: number;
-  count: number;
-  category: 'upper' | 'lower' | 'core' | 'cardio';
-}
-
-export interface WorkoutStats {
-  totalWorkouts: number;
-  totalVolume: number;
-  favoriteExercise: string;
-  averageVolume: number;
-  dateRange: {
-    start: Date;
-    end: Date;
-  };
-}
-
-export interface ColumnMapping {
-  date: string | null;
-  exercise: string | null;
-  sets: string | null;
-  reps: string | null;
-  weight: string | null;
-  notes?: string | null;
-}
-
-export interface ParsedData {
-  headers: string[];
-  rows: Record<string, unknown>[];
-  suggestedMapping: ColumnMapping;
-}
-
-export interface AIAnalysis {
-  summary: string;
-  muscleDistribution: {
-    upperBody: number;
-    lowerBody: number;
-    core: number;
-  };
-  recommendations: string[];
-  exercisesToAdd: string[];
-  exercisesToReduce: string[];
-  postureRecommendations: string[];
-}
-
-export interface ExerciseSubstitute {
-  name: string;
-  muscleGroup: MuscleGroup;
-  equipment: string[];
-  description: string;
-  feminizationNote?: string;
-}
-
-export interface WorkoutDay {
-  id: string;
-  name: string;
-  fileName: string;
-  entries: WorkoutEntry[];
-  uploadedAt: Date;
-}
-
-export interface WorkoutProgram {
-  id: string;
-  name: string;
-  days: WorkoutDay[];
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export interface GeneratedExercise {
   name: string;
@@ -241,10 +159,6 @@ export interface MeasurementSettings {
 }
 
 export interface StoredWorkoutData {
-  program: WorkoutProgram | null;
-  workouts: WorkoutEntry[];
-  stats: WorkoutStats | null;
-  muscleData: MuscleGroupData[];
   generatedRoutines: GeneratedRoutine[];
   sessions: WorkoutSession[];
   measurements: BodyMeasurement[];

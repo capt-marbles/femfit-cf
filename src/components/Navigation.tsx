@@ -1,9 +1,8 @@
 import { NavLink } from 'react-router-dom';
-import { Upload, LayoutDashboard, Sparkles, Dumbbell, Ruler } from 'lucide-react';
+import { LayoutDashboard, Sparkles, Dumbbell, Ruler } from 'lucide-react';
 
 const tabs = [
-  { to: '/', icon: Upload, label: 'Upload' },
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/', icon: LayoutDashboard, label: 'Home' },
   { to: '/generate', icon: Sparkles, label: 'Generate' },
   { to: '/log', icon: Dumbbell, label: 'Log' },
   { to: '/measurements', icon: Ruler, label: 'Measure' },
@@ -42,7 +41,7 @@ export default function Navigation() {
       {/* Mobile bottom tab bar */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-4">
           {tabs.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}

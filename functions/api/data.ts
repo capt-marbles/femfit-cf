@@ -8,10 +8,6 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
   const value = await env.FEMFIT_KV.get(KV_KEY);
   if (!value) {
     return Response.json({
-      program: null,
-      workouts: [],
-      stats: null,
-      muscleData: [],
       generatedRoutines: [],
       sessions: [],
       measurements: [],
