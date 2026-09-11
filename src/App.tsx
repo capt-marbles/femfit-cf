@@ -3,6 +3,7 @@ import { WorkoutProvider } from './context/WorkoutContext';
 import Navigation from './components/Navigation';
 import Dashboard from './pages/Dashboard';
 import Generate from './pages/Generate';
+import Program from './pages/Program';
 import Log from './pages/Log';
 import Measurements from './pages/Measurements';
 
@@ -16,6 +17,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/generate" element={<Generate />} />
+              <Route path="/program" element={<Program />} />
               <Route path="/log" element={<Log />} />
               <Route path="/measurements" element={<Measurements />} />
               {/* Old bookmarks */}

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { useWorkout } from '../context/WorkoutContext';
+import { getProgressionSuggestions } from '../lib/progression';
 import {
   GeneratedRoutine,
   LoggedSet,
@@ -20,6 +21,7 @@ import {
   WarmupRoutine,
   CooldownRoutine,
   StretchExercise,
+  ProgressionSuggestion,
 } from '../types/workout';
 
 interface SetInput {
@@ -122,6 +124,47 @@ function ChecklistSection({ title, icon, items, checked, onToggle, emptyLabel }:
   );
 }
 
+function ProgressionChip({ suggestion }: { suggestion: ProgressionSuggestion }) {
+  const { action, suggestedWeight, suggestedReps, lastWeight, lastReps } = suggestion;
+
+  let icon = '';
+  let label = '';
+  let classes = '';
+
+  if (action === 'increase-weight') {
+    icon = '↑';
+    label = `Try ${suggestedWeight} lb × ${suggestedReps}`;
+    classes = 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
+  } else if (action === 'increase-reps') {
+    icon = '↑';
+    label = `Push for ${suggestedReps} reps at ${lastWeight} lb`;
+    classes = 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800';
+  } else if (action === 'deload') {
+    icon = '↓';
+    label = `Deload to ${suggestedWeight} lb`;
+    classes = 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800';
+  } else if (action === 'hold') {
+    icon = '→';
+    label = `Hold at ${lastWeight} lb`;
+    classes = 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800';
+  } else {
+    // maintain
+    icon = '→';
+    label = `Maintain current load`;
+    classes = 'bg-muted/60 text-muted-foreground border-border';
+  }
+
+  return (
+    <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md border text-xs font-medium ${classes}`}>
+      <span className="text-sm leading-none">{icon}</span>
+      <span>{label}</span>
+      {lastReps && (
+        <span className="ml-auto opacity-60 font-normal">last: {lastReps}</span>
+      )}
+    </div>
+  );
+}
+
 export function SessionLogger() {
   const { generatedRoutines, sessions, saveSession } = useWorkout();
 
@@ -156,6 +199,13 @@ export function SessionLogger() {
       }
     }
     return map;
+  }, [sessions]);
+
+  const progressionMap = useMemo(() => {
+    const suggestions = getProgressionSuggestions(sessions);
+    return new Map<string, ProgressionSuggestion>(
+      suggestions.map((s) => [s.exercise.trim().toLowerCase(), s])
+    );
   }, [sessions]);
 
   const initLogs = (r: GeneratedRoutine, dIdx: number) => {
@@ -367,11 +417,12 @@ export function SessionLogger() {
           {/* Main exercises */}
           {day.exercises.map((ex, exIdx) => {
             const targetReps = parseRepRange(ex.reps);
+            const progression = progressionMap.get(ex.name.trim().toLowerCase());
             return (
               <Card key={exIdx}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <CardTitle className="text-base">{ex.name}</CardTitle>
                       {ex.notes && (
                         <p className="text-xs text-muted-foreground mt-1 max-w-prose">
@@ -395,6 +446,7 @@ export function SessionLogger() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
+                  {progression && <ProgressionChip suggestion={progression} />}
                   <div className="grid grid-cols-[2rem_1fr_1fr_1fr] gap-2 text-xs text-muted-foreground px-1">
                     <span>#</span>
                     <span>Weight (lb)</span>

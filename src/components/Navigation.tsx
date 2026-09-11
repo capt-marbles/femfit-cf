@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Sparkles, Dumbbell, Ruler } from 'lucide-react';
+import { LayoutDashboard, Sparkles, BookOpen, Dumbbell, Ruler } from 'lucide-react';
 
 const tabs = [
   { to: '/', icon: LayoutDashboard, label: 'Home' },
-  { to: '/generate', icon: Sparkles, label: 'Generate' },
+  { to: '/program', icon: BookOpen, label: 'Program' },
   { to: '/log', icon: Dumbbell, label: 'Log' },
   { to: '/measurements', icon: Ruler, label: 'Measure' },
+  { to: '/generate', icon: Sparkles, label: 'Generate' },
 ];
 
 export default function Navigation() {
@@ -41,7 +42,7 @@ export default function Navigation() {
       {/* Mobile bottom tab bar */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           {tabs.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
