@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- full bleed background for maskable safe zone -->
+  <rect width="100" height="100" fill="#ec4899"/>
+  <g stroke="white" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="30" y1="50" x2="70" y2="50" stroke-width="6"/>
+    <rect x="16" y="38" width="14" height="24" rx="4" stroke-width="5" fill="white"/>
+    <rect x="70" y="38" width="14" height="24" rx="4" stroke-width="5" fill="white"/>
+    <line x1="30" y1="43" x2="30" y2="57" stroke-width="7"/>
+    <line x1="70" y1="43" x2="70" y2="57" stroke-width="7"/>
+  </g>
+</svg>
