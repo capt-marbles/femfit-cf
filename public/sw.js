@@ -1,4 +1,4 @@
-const CACHE = 'femfit-v1';
+const CACHE = 'femfit-v2';
 
 const PRECACHE = [
   '/',
@@ -72,5 +72,54 @@ self.addEventListener('fetch', (e) => {
         return res;
       })
       .catch(() => caches.match('/') )
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Push notifications
+// ---------------------------------------------------------------------------
+
+// Pushes are sent without a payload (no encryption needed server-side), so the
+// copy lives here. If a payload ever is sent, it wins.
+self.addEventListener('push', (event) => {
+  let title = 'Log your weight';
+  let body = "You haven't logged a weight today.";
+
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      title = data.title || title;
+      body = data.body || body;
+    } catch {
+      body = event.data.text() || body;
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: '/favicon.svg',
+      badge: '/favicon.svg',
+      tag: 'weight-reminder',
+      renotify: false,
+      data: { url: '/measurements' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = event.notification.data?.url || '/measurements';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if ('focus' in client) {
+          client.navigate(target).catch(() => {});
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(target);
+    })
   );
 });

@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { MeasurementForm } from '../components/MeasurementForm';
 import { MeasurementCharts } from '../components/MeasurementCharts';
 import { MeasurementHistory } from '../components/MeasurementHistory';
+import { ReminderSettings, TodayWeightNudge } from '../components/ReminderSettings';
 import { ClipboardList, LineChart, History } from 'lucide-react';
 
 export default function MeasurementsPage() {
@@ -32,8 +33,10 @@ export default function MeasurementsPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="log">
+        <TabsContent value="log" className="space-y-6">
+          <TodayWeightNudge />
           <MeasurementForm />
+          <ReminderSettings />
         </TabsContent>
 
         <TabsContent value="charts">

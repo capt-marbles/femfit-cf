@@ -1,0 +1,8 @@
+{
+  "name": "femfit-reminders",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  }
+}
