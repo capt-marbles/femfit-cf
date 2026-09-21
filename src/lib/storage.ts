@@ -61,6 +61,12 @@ export async function clearWorkoutData(): Promise<void> {
   await fetch(KV_API, { method: 'DELETE' });
 }
 
+export async function updateGeneratedRoutine(routine: GeneratedRoutine): Promise<void> {
+  const data = await loadWorkoutData();
+  const updated = data.generatedRoutines.map((r) => (r.id === routine.id ? routine : r));
+  await saveWorkoutData({ ...data, generatedRoutines: updated });
+}
+
 export async function saveGeneratedRoutine(routine: GeneratedRoutine): Promise<void> {
   const data = await loadWorkoutData();
   const updated = [routine, ...data.generatedRoutines].slice(0, 10);

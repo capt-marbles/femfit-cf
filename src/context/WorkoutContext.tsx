@@ -17,7 +17,7 @@ import {
   saveWorkoutData,
   loadWorkoutData,
   clearWorkoutData,
-  saveGeneratedRoutine,
+  saveGeneratedRoutine, updateGeneratedRoutine,
   deleteGeneratedRoutine,
   saveSession as persistSession,
   deleteSession as removeSession,
@@ -26,6 +26,7 @@ import {
 interface WorkoutContextType {
   generatedRoutines: GeneratedRoutine[];
   saveRoutine: (routine: GeneratedRoutine) => void;
+  updateRoutine: (routine: GeneratedRoutine) => void;
   deleteRoutine: (routineId: string) => void;
   sessions: WorkoutSession[];
   saveSession: (session: WorkoutSession) => void;
@@ -106,6 +107,11 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const updateRoutine = useCallback((routine: GeneratedRoutine) => {
+    setGeneratedRoutines((prev) => prev.map((r) => (r.id === routine.id ? routine : r)));
+    updateGeneratedRoutine(routine).then(() => setLastUpdated(new Date()));
+  }, []);
+
   const deleteRoutine = useCallback((routineId: string) => {
     setGeneratedRoutines((prev) => prev.filter((r) => r.id !== routineId));
     deleteGeneratedRoutine(routineId);
@@ -150,7 +156,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <WorkoutContext.Provider value={{
-      generatedRoutines, saveRoutine, deleteRoutine,
+      generatedRoutines, saveRoutine, updateRoutine, deleteRoutine,
       sessions, saveSession, deleteSession,
       measurements, measurementGoals, measurementSettings,
       addMeasurement, updateMeasurement, deleteMeasurement, setMeasurementGoals, setMeasurementSettings,

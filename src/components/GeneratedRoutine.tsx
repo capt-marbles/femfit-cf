@@ -15,6 +15,7 @@ import {
   Wind,
   Heart,
   Timer,
+  Repeat,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -47,6 +48,8 @@ interface GeneratedRoutineProps {
   onSave?: (routine: GeneratedRoutineType) => void;
   onDelete?: (routineId: string) => void;
   isSaved?: boolean;
+  /** When provided, each exercise gets a swap control. */
+  onSwapExercise?: (dayIndex: number, exerciseIndex: number) => void;
 }
 
 export function GeneratedRoutine({
@@ -54,6 +57,7 @@ export function GeneratedRoutine({
   onSave,
   onDelete,
   isSaved = false,
+  onSwapExercise,
 }: GeneratedRoutineProps) {
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set([0]));
   const [showCardio, setShowCardio] = useState(true);
@@ -191,6 +195,11 @@ export function GeneratedRoutine({
               dayNumber={index + 1}
               isExpanded={expandedDays.has(index)}
               onToggle={() => toggleDay(index)}
+              onSwapExercise={
+                onSwapExercise
+                  ? (exIndex: number) => onSwapExercise(index, exIndex)
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -316,6 +325,7 @@ interface WorkoutDayCardProps {
   dayNumber: number;
   isExpanded: boolean;
   onToggle: () => void;
+  onSwapExercise?: (exerciseIndex: number) => void;
 }
 
 function WorkoutDayCard({
@@ -323,6 +333,7 @@ function WorkoutDayCard({
   dayNumber,
   isExpanded,
   onToggle,
+  onSwapExercise,
 }: WorkoutDayCardProps) {
   const warmup = day.warmup;
   const cooldown = day.cooldown;
@@ -396,6 +407,16 @@ function WorkoutDayCard({
                           <div className="flex items-center gap-2">
                             <Dumbbell className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                             <span className="font-medium">{exercise.name}</span>
+                            {onSwapExercise && (
+                              <button
+                                onClick={() => onSwapExercise(exIndex)}
+                                title={`Swap ${exercise.name}`}
+                                aria-label={`Swap ${exercise.name}`}
+                                className="flex-shrink-0 p-1.5 -m-0.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
+                              >
+                                <Repeat className="h-3.5 w-3.5" />
+                              </button>
+                            )}
                           </div>
                           {exercise.feminizationNote && (
                             <p className="text-xs text-primary mt-1 ml-6">
