@@ -6,3 +6,4 @@ dist
 *.local
 .vapid-keys.json
 .test-token
+backups/

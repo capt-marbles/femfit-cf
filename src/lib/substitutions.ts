@@ -85,6 +85,7 @@ export const SUBSTITUTION_GROUPS: SubstitutionGroup[] = [
       { name: 'Stiff-Leg Deadlift', equipment: 'barbell' },
       { name: 'Sumo Deadlift', equipment: 'barbell' },
       { name: 'Seated Good Morning', equipment: 'barbell', note: 'Seated only — standing is excluded for this client.' },
+      { name: 'Kettlebell Swing', equipment: 'dumbbell', note: 'Ballistic hinge — drive with the hips, do not squat it.' },
     ],
   },
   {

@@ -120,9 +120,13 @@ export const ABDUCTION_PATTERNS: RegExp =
 export const PULL_PATTERNS: RegExp =
   /row|face pull|rear delt|reverse fly|prone fly|pulldown|pull.?up|chin.?up|pull down/i;
 
-/** Hip hinge pattern — hamstring/glute lengthening under load. */
+/**
+ * Hip hinge pattern — hamstring/glute lengthening under load.
+ * "kettlebell swing" is matched in full rather than bare "swing", which would
+ * also catch the leg swings used as warmup mobility drills.
+ */
 export const HINGE_PATTERNS: RegExp =
-  /romanian deadlift|\brdl\b|stiff.?leg|good morning|hip hinge|deadlift/i;
+  /romanian deadlift|\brdl\b|stiff.?leg|good morning|hip hinge|deadlift|kettlebell swing|\bkb swing/i;
 
 /** Hip extension via bridging. Complements, does not replace, the hinge. */
 export const THRUST_PATTERNS: RegExp =
@@ -130,7 +134,7 @@ export const THRUST_PATTERNS: RegExp =
 
 /** Glute max work generally. */
 export const GLUTE_PATTERNS: RegExp =
-  /glute|hip thrust|kickback|donkey kick|romanian deadlift|\brdl\b|sumo|step.?up|split squat|lunge|good morning/i;
+  /glute|hip thrust|kickback|donkey kick|romanian deadlift|\brdl\b|sumo|step.?up|split squat|lunge|good morning|kettlebell swing|\bkb swing/i;
 
 /** Hamstring work. An RDL alone does not cover this. */
 export const HAMSTRING_PATTERNS: RegExp =
