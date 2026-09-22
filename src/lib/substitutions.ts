@@ -10,6 +10,7 @@ import {
   HORIZONTAL_PRESS_PATTERNS,
   GLUTE_PATTERNS,
   SHOULDER_WIDENING_PATTERNS,
+  QUAD_DOMINANT_PATTERNS,
 } from '../../functions/_shared/feminization';
 
 export type Equipment = 'barbell' | 'dumbbell' | 'machine' | 'cable' | 'band' | 'bodyweight';
@@ -103,6 +104,22 @@ export const SUBSTITUTION_GROUPS: SubstitutionGroup[] = [
     ],
   },
   {
+    key: 'squat',
+    label: 'Bilateral squat / leg press',
+    why: 'Quad-dominant pressing. Not one of the five volume buckets the dashboard tracks, since quads are not a priority here — but keeping the pattern consistent is what makes the loading history comparable session to session.',
+    pattern: QUAD_DOMINANT_PATTERNS,
+    options: [
+      { name: 'Goblet Squat', equipment: 'dumbbell', note: 'One dumbbell or kettlebell at the chest — the easiest version to keep depth honest.' },
+      { name: 'Dumbbell Squat', equipment: 'dumbbell' },
+      { name: 'Barbell Back Squat', equipment: 'barbell' },
+      { name: 'Front Squat', equipment: 'barbell' },
+      { name: 'Box Squat', equipment: 'barbell' },
+      { name: 'Hack Squat', equipment: 'machine' },
+      { name: 'Leg Press', equipment: 'machine' },
+      { name: 'Belt Squat', equipment: 'machine' },
+    ],
+  },
+  {
     key: 'hamstring',
     label: 'Hamstring curl',
     why: 'Knee-flexion hamstring work. An RDL alone does not cover this function.',
@@ -184,6 +201,7 @@ const CLASSIFY_ORDER = [
   'thrust',
   'hinge',
   'unilateral',
+  'squat',
   'hamstring',
   'core',
   'pull',
