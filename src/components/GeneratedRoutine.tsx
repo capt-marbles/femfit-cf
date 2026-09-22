@@ -50,6 +50,8 @@ interface GeneratedRoutineProps {
   isSaved?: boolean;
   /** When provided, each exercise gets a swap control. */
   onSwapExercise?: (dayIndex: number, exerciseIndex: number) => void;
+  /** Render every day closed instead of opening the first one. */
+  startCollapsed?: boolean;
 }
 
 export function GeneratedRoutine({
@@ -58,8 +60,11 @@ export function GeneratedRoutine({
   onDelete,
   isSaved = false,
   onSwapExercise,
+  startCollapsed = false,
 }: GeneratedRoutineProps) {
-  const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set([0]));
+  const [expandedDays, setExpandedDays] = useState<Set<number>>(
+    startCollapsed ? new Set() : new Set([0])
+  );
   const [showCardio, setShowCardio] = useState(true);
 
   const toggleDay = (index: number) => {

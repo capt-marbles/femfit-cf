@@ -150,6 +150,7 @@ export default function Program() {
         routine={routine}
         onDelete={deleteRoutine}
         isSaved={true}
+        startCollapsed
         onSwapExercise={(dayIndex, exerciseIndex) =>
           setSwapTarget({
             dayIndex,
