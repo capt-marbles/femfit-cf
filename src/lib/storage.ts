@@ -6,6 +6,7 @@ const EMPTY: StoredWorkoutData = {
   generatedRoutines: [],
   sessions: [],
   measurements: [],
+  nutrition: [],
   lastUpdated: new Date().toISOString(),
 };
 
@@ -18,6 +19,7 @@ function deserialize(raw: Record<string, unknown>): StoredWorkoutData {
   const routines = Array.isArray(raw.generatedRoutines) ? raw.generatedRoutines : [];
   const sessions = Array.isArray(raw.sessions) ? raw.sessions : [];
   const measurements = Array.isArray(raw.measurements) ? raw.measurements : [];
+  const nutrition = Array.isArray(raw.nutrition) ? raw.nutrition : [];
 
   return {
     generatedRoutines: (routines as GeneratedRoutine[]).map((r) => ({
@@ -32,6 +34,11 @@ function deserialize(raw: Record<string, unknown>): StoredWorkoutData {
       ...m,
       date: new Date(m.date),
     })),
+    nutrition: (nutrition as StoredWorkoutData['nutrition']).map((n) => ({
+      ...n,
+      date: new Date(n.date),
+    })),
+    nutritionTargets: raw.nutritionTargets as StoredWorkoutData['nutritionTargets'],
     measurementGoals: raw.measurementGoals as StoredWorkoutData['measurementGoals'],
     measurementSettings: raw.measurementSettings as StoredWorkoutData['measurementSettings'],
     lastUpdated: typeof raw.lastUpdated === 'string' ? raw.lastUpdated : EMPTY.lastUpdated,

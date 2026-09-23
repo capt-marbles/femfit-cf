@@ -154,6 +154,24 @@ export interface MeasurementGoals {
   bust?: number;
 }
 
+/** One day's intake totals. Entered as totals — femfit does not log food. */
+export interface DailyNutrition {
+  id: string;
+  date: Date;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  notes?: string;
+}
+
+export interface NutritionTargets {
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+}
+
 export interface MeasurementSettings {
   unit: 'imperial' | 'metric';
 }
@@ -164,5 +182,7 @@ export interface StoredWorkoutData {
   measurements: BodyMeasurement[];
   measurementGoals?: MeasurementGoals;
   measurementSettings?: MeasurementSettings;
+  nutrition: DailyNutrition[];
+  nutritionTargets?: NutritionTargets;
   lastUpdated: string;
 }

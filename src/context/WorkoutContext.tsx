@@ -12,6 +12,8 @@ import {
   BodyMeasurement,
   MeasurementGoals,
   MeasurementSettings,
+  DailyNutrition,
+  NutritionTargets,
 } from '../types/workout';
 import {
   saveWorkoutData,
@@ -39,6 +41,11 @@ interface WorkoutContextType {
   deleteMeasurement: (id: string) => void;
   setMeasurementGoals: (goals: MeasurementGoals) => void;
   setMeasurementSettings: (settings: MeasurementSettings) => void;
+  nutrition: DailyNutrition[];
+  nutritionTargets: NutritionTargets | null;
+  upsertNutrition: (entry: DailyNutrition) => void;
+  deleteNutrition: (id: string) => void;
+  setNutritionTargets: (targets: NutritionTargets) => void;
   lastUpdated: Date | null;
   isLoading: boolean;
   hasStoredData: boolean;
@@ -53,6 +60,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>([]);
   const [measurementGoals, setMeasurementGoalsState] = useState<MeasurementGoals | null>(null);
   const [measurementSettings, setMeasurementSettingsState] = useState<MeasurementSettings>({ unit: 'imperial' });
+  const [nutrition, setNutrition] = useState<DailyNutrition[]>([]);
+  const [nutritionTargets, setNutritionTargetsState] = useState<NutritionTargets | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasStoredData, setHasStoredData] = useState(false);
@@ -69,6 +78,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         setGeneratedRoutines(stored.generatedRoutines);
         setSessions(stored.sessions);
         setMeasurements(stored.measurements);
+        setNutrition(stored.nutrition || []);
+        if (stored.nutritionTargets) setNutritionTargetsState(stored.nutritionTargets);
         if (stored.measurementGoals) setMeasurementGoalsState(stored.measurementGoals);
         if (stored.measurementSettings) setMeasurementSettingsState(stored.measurementSettings);
         if (stored.lastUpdated) setLastUpdated(new Date(stored.lastUpdated));
@@ -90,6 +101,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
           measurements,
           measurementGoals: measurementGoals || undefined,
           measurementSettings,
+          nutrition,
+          nutritionTargets: nutritionTargets || undefined,
           lastUpdated: new Date().toISOString(),
         }).then(() => {
           setLastUpdated(new Date());
@@ -97,7 +110,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         });
       });
     }, 1000);
-  }, [measurements, measurementGoals, measurementSettings, isLoading]);
+  }, [measurements, measurementGoals, measurementSettings, nutrition, nutritionTargets, isLoading]);
 
   const saveRoutine = useCallback((routine: GeneratedRoutine) => {
     setGeneratedRoutines((prev) => [routine, ...prev].slice(0, 10));
@@ -144,11 +157,29 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     setMeasurements((prev) => prev.filter((m) => m.id !== id));
   }, []);
 
+  /** One entry per day: re-saving a date replaces that day rather than stacking. */
+  const upsertNutrition = useCallback((entry: DailyNutrition) => {
+    const key = new Date(entry.date).toISOString().slice(0, 10);
+    setNutrition((prev) =>
+      [...prev.filter((n) => new Date(n.date).toISOString().slice(0, 10) !== key), entry]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    );
+  }, []);
+
+  const deleteNutrition = useCallback((id: string) => {
+    setNutrition((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  const setNutritionTargets = useCallback((t: NutritionTargets) => {
+    setNutritionTargetsState(t);
+  }, []);
+
   const setMeasurementGoals = useCallback((goals: MeasurementGoals) => { setMeasurementGoalsState(goals); }, []);
   const setMeasurementSettings = useCallback((settings: MeasurementSettings) => { setMeasurementSettingsState(settings); }, []);
 
   const clearStoredData = useCallback(() => {
     setGeneratedRoutines([]); setSessions([]); setMeasurements([]);
+    setNutrition([]); setNutritionTargetsState(null);
     setMeasurementGoalsState(null); setMeasurementSettingsState({ unit: 'imperial' });
     setLastUpdated(null); setHasStoredData(false);
     clearWorkoutData();
@@ -160,6 +191,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       sessions, saveSession, deleteSession,
       measurements, measurementGoals, measurementSettings,
       addMeasurement, updateMeasurement, deleteMeasurement, setMeasurementGoals, setMeasurementSettings,
+      nutrition, nutritionTargets, upsertNutrition, deleteNutrition, setNutritionTargets,
       lastUpdated, isLoading, hasStoredData, clearStoredData,
     }}>
       {children}
