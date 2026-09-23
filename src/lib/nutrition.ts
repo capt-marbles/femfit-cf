@@ -154,12 +154,27 @@ export function energyBalance(
   };
 }
 
+/**
+ * Protein thresholds tuned for this client rather than the general population.
+ * Age 58 brings anabolic resistance — more protein is needed per day to provoke
+ * the same muscle protein synthesis response — and androgen blockade removes
+ * much of the testosterone signal that would otherwise drive it. Both push the
+ * floor up, and a calorie deficit pushes it up again, so the usual 0.7 g/lb
+ * low-end is not protective here.
+ *
+ * Above the upper bound is informational, not a warning: there is no benefit
+ * being missed, just no further gain from the extra grams.
+ */
+const PROTEIN_LOW_GPLB = 0.9;
+const PROTEIN_AMPLE_GPLB = 1.3;
+
 export interface ProteinRead {
   meanProtein: number | null;
   latestWeight: number | null;
   gramsPerLb: number | null;
-  /** 0.7-1.0 g/lb is the usual range for holding muscle in a deficit. */
-  verdict: 'low' | 'adequate' | 'high' | null;
+  verdict: 'low' | 'adequate' | 'ample' | null;
+  /** The band being applied, so the UI can state it rather than imply it. */
+  band: { low: number; ample: number };
 }
 
 export function proteinRead(
@@ -185,7 +200,12 @@ export function proteinRead(
 
   let verdict: ProteinRead['verdict'] = null;
   if (gramsPerLb !== null) {
-    verdict = gramsPerLb < 0.7 ? 'low' : gramsPerLb > 1.1 ? 'high' : 'adequate';
+    verdict =
+      gramsPerLb < PROTEIN_LOW_GPLB
+        ? 'low'
+        : gramsPerLb > PROTEIN_AMPLE_GPLB
+          ? 'ample'
+          : 'adequate';
   }
 
   return {
@@ -193,6 +213,7 @@ export function proteinRead(
     latestWeight,
     gramsPerLb,
     verdict,
+    band: { low: PROTEIN_LOW_GPLB, ample: PROTEIN_AMPLE_GPLB },
   };
 }
 

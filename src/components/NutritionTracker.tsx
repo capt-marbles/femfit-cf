@@ -224,11 +224,19 @@ export function NutritionTracker() {
                 : 'text-emerald-600 dark:text-emerald-400'
             }`}>
               {protein14.verdict === 'low'
-                ? 'Below 0.7 g/lb. Holding muscle in a deficit is harder at the low end, and more so when returning to training.'
-                : protein14.verdict === 'high'
-                  ? 'Comfortably above the range needed to hold muscle in a deficit.'
-                  : 'In the 0.7-1.1 g/lb range usually used to hold muscle while losing fat.'}
+                ? `Below ${protein14.band.low} g/lb. In a deficit that is where lean mass starts getting spent alongside fat.`
+                : protein14.verdict === 'ample'
+                  ? `Above ${protein14.band.ample} g/lb — more than needed, though nothing is lost by it.`
+                  : `Inside the ${protein14.band.low}-${protein14.band.ample} g/lb target band.`}
             </p>
+            <div className="flex gap-2 rounded-md bg-muted/50 border border-border p-2.5">
+              <Info className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground">
+                This band sits higher than the usual 0.7-1.1 g/lb advice. Anabolic resistance at
+                58 and reduced androgen signalling both mean more protein is needed to hold the
+                same muscle, and a deficit raises it again.
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
