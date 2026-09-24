@@ -24,6 +24,7 @@ import {
   saveSession as persistSession,
   deleteSession as removeSession,
 } from '../lib/storage';
+import { localDateKey } from '../lib/dates';
 
 interface WorkoutContextType {
   generatedRoutines: GeneratedRoutine[];
@@ -145,8 +146,26 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     removeSession(sessionId);
   }, []);
 
+  /**
+   * Merges into the existing record for that day rather than appending. Logging
+   * weight in the morning and a waist measurement later should land on one day,
+   * and re-saving the same value should correct it rather than stack another
+   * copy. Only fields that were actually supplied overwrite.
+   */
   const addMeasurement = useCallback((measurement: BodyMeasurement) => {
-    setMeasurements((prev) => [...prev, measurement].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    setMeasurements((prev) => {
+      const key = localDateKey(measurement.date);
+      const existing = prev.find((m) => localDateKey(m.date) === key);
+      const supplied = Object.fromEntries(
+        Object.entries(measurement).filter(
+          ([k, v]) => v !== undefined && k !== 'id' && k !== 'date'
+        )
+      );
+      const next = existing
+        ? prev.map((m) => (m === existing ? { ...m, ...supplied } : m))
+        : [...prev, measurement];
+      return next.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    });
   }, []);
 
   const updateMeasurement = useCallback((id: string, updates: Partial<BodyMeasurement>) => {

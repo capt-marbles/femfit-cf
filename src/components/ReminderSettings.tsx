@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { useWorkout } from '../context/WorkoutContext';
+import { isSameLocalDay } from '../lib/dates';
 import {
   isPushSupported,
   needsHomeScreenInstall,
@@ -27,21 +28,13 @@ function formatHour(h: number): string {
   return `${display}:00 ${suffix}`;
 }
 
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
 /** Banner shown when today has no weight entry yet. */
 export function TodayWeightNudge() {
   const { measurements } = useWorkout();
   const today = new Date();
 
   const loggedToday = measurements.some(
-    (m) => m.weight !== undefined && isSameDay(new Date(m.date), today)
+    (m) => m.weight !== undefined && isSameLocalDay(m.date, today)
   );
 
   if (loggedToday) {

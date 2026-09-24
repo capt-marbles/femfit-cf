@@ -1,6 +1,7 @@
 
 
 import { useState } from 'react';
+import { todayISO, fromDateInput } from '../lib/dates';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -20,8 +21,8 @@ export function MeasurementForm({ editingMeasurement, onCancel, onSave }: Measur
 
   const [date, setDate] = useState(
     editingMeasurement
-      ? new Date(editingMeasurement.date).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0]
+      ? todayISO(new Date(editingMeasurement.date))
+      : todayISO()
   );
   const [weight, setWeight] = useState(editingMeasurement?.weight?.toString() || '');
   const [waist, setWaist] = useState(editingMeasurement?.waist?.toString() || '');
@@ -40,7 +41,7 @@ export function MeasurementForm({ editingMeasurement, onCancel, onSave }: Measur
 
     const measurement: BodyMeasurement = {
       id: editingMeasurement?.id || `measurement-${Date.now()}`,
-      date: new Date(date),
+      date: fromDateInput(date),
       weight: weight ? parseFloat(weight) : undefined,
       waist: waist ? parseFloat(waist) : undefined,
       hips: hips ? parseFloat(hips) : undefined,
@@ -65,7 +66,7 @@ export function MeasurementForm({ editingMeasurement, onCancel, onSave }: Measur
       setThighRight('');
       setBust('');
       setNotes('');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(todayISO());
     }
 
     onSave?.();
