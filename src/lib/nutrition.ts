@@ -76,7 +76,20 @@ export function energyBalance(
   windowDays = 21
 ): EnergyBalance {
   const intake = nutrition.filter((n) => n.calories != null && withinDays(n.date, windowDays));
-  const weights = measurements.filter((m) => m.weight != null && withinDays(m.date, windowDays));
+
+  // The weight trend has to describe the same span the intake covers. Filtering
+  // both by window length independently lets a long weight history pair with a
+  // short intake log, so the mean intake gets attributed to weeks it never
+  // applied to — and any step change in that extra history poisons the slope.
+  const firstIntake = intake.length
+    ? Math.min(...intake.map((n) => new Date(n.date).getTime()))
+    : null;
+  const weights = measurements.filter(
+    (m) =>
+      m.weight != null &&
+      withinDays(m.date, windowDays) &&
+      (firstIntake === null || new Date(m.date).getTime() >= firstIntake)
+  );
 
   // Collapse to one value per day so a double-logged day cannot outvote others.
   const byDayCal = new Map<string, number>();
