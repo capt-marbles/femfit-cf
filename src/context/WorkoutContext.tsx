@@ -23,6 +23,9 @@ import {
   deleteGeneratedRoutine,
   saveSession as persistSession,
   deleteSession as removeSession,
+  mergeByDay,
+  removeMeasurement,
+  removeNutrition,
 } from '../lib/storage';
 import { localDateKey } from '../lib/dates';
 
@@ -66,6 +69,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasStoredData, setHasStoredData] = useState(false);
+  // A client that could not read storage must never write to it.
+  const [loadFailed, setLoadFailed] = useState(false);
 
   // Load from KV on mount
   useEffect(() => {
@@ -73,7 +78,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       const any =
         stored.generatedRoutines.length > 0 ||
         stored.sessions.length > 0 ||
-        stored.measurements.length > 0;
+        stored.measurements.length > 0 ||
+        (stored.nutrition || []).length > 0;
       if (any) {
         setHasStoredData(true);
         setGeneratedRoutines(stored.generatedRoutines);
@@ -86,6 +92,11 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         if (stored.lastUpdated) setLastUpdated(new Date(stored.lastUpdated));
       }
       setIsLoading(false);
+    }).catch(() => {
+      // Leave every collection empty and latch the failure, so the debounced
+      // save below cannot persist this blank state over real records.
+      setLoadFailed(true);
+      setIsLoading(false);
     });
   }, []);
 
@@ -93,16 +104,18 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   // isLoading guard prevents a spurious save on the initial hydration pass.
   const measurementSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || loadFailed) return;
     if (measurementSaveTimerRef.current) clearTimeout(measurementSaveTimerRef.current);
     measurementSaveTimerRef.current = setTimeout(() => {
       loadWorkoutData().then((current) => {
         saveWorkoutData({
           ...current,
-          measurements,
+          // Merged, not replaced: this client may not have seen days another
+          // device logged since it loaded.
+          measurements: mergeByDay(current.measurements, measurements),
           measurementGoals: measurementGoals || undefined,
           measurementSettings,
-          nutrition,
+          nutrition: mergeByDay(current.nutrition || [], nutrition),
           nutritionTargets: nutritionTargets || undefined,
           lastUpdated: new Date().toISOString(),
         }).then(() => {
@@ -111,39 +124,45 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         });
       });
     }, 1000);
-  }, [measurements, measurementGoals, measurementSettings, nutrition, nutritionTargets, isLoading]);
+  }, [measurements, measurementGoals, measurementSettings, nutrition, nutritionTargets, isLoading, loadFailed]);
 
   const saveRoutine = useCallback((routine: GeneratedRoutine) => {
     setGeneratedRoutines((prev) => [routine, ...prev].slice(0, 10));
-    saveGeneratedRoutine(routine).then(() => {
-      setLastUpdated(new Date());
-      setHasStoredData(true);
-    });
+    saveGeneratedRoutine(routine)
+      .then(() => {
+        setLastUpdated(new Date());
+        setHasStoredData(true);
+      })
+      .catch(() => {});
   }, []);
 
   const updateRoutine = useCallback((routine: GeneratedRoutine) => {
     setGeneratedRoutines((prev) => prev.map((r) => (r.id === routine.id ? routine : r)));
-    updateGeneratedRoutine(routine).then(() => setLastUpdated(new Date()));
+    updateGeneratedRoutine(routine)
+      .then(() => setLastUpdated(new Date()))
+      .catch(() => {});
   }, []);
 
   const deleteRoutine = useCallback((routineId: string) => {
     setGeneratedRoutines((prev) => prev.filter((r) => r.id !== routineId));
-    deleteGeneratedRoutine(routineId);
+    deleteGeneratedRoutine(routineId).catch(() => {});
   }, []);
 
   const saveSession = useCallback((session: WorkoutSession) => {
     setSessions((prev) => [session, ...prev]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 200));
-    persistSession(session).then(() => {
-      setLastUpdated(new Date());
-      setHasStoredData(true);
-    });
+    persistSession(session)
+      .then(() => {
+        setLastUpdated(new Date());
+        setHasStoredData(true);
+      })
+      .catch(() => {});
   }, []);
 
   const deleteSession = useCallback((sessionId: string) => {
     setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    removeSession(sessionId);
+    removeSession(sessionId).catch(() => {});
   }, []);
 
   /**
@@ -174,6 +193,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
 
   const deleteMeasurement = useCallback((id: string) => {
     setMeasurements((prev) => prev.filter((m) => m.id !== id));
+    removeMeasurement(id).catch(() => {});
   }, []);
 
   /** One entry per day: re-saving a date replaces that day rather than stacking. */
@@ -187,6 +207,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
 
   const deleteNutrition = useCallback((id: string) => {
     setNutrition((prev) => prev.filter((n) => n.id !== id));
+    removeNutrition(id).catch(() => {});
   }, []);
 
   const setNutritionTargets = useCallback((t: NutritionTargets) => {

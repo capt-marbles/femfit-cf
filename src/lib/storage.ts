@@ -1,3 +1,4 @@
+import { localDateKey } from './dates';
 import { StoredWorkoutData, GeneratedRoutine, WorkoutSession } from '../types/workout';
 
 const KV_API = '/api/data';
@@ -45,15 +46,43 @@ function deserialize(raw: Record<string, unknown>): StoredWorkoutData {
   };
 }
 
-export async function loadWorkoutData(): Promise<StoredWorkoutData> {
-  try {
-    const res = await fetch(KV_API);
-    if (!res.ok) return { ...EMPTY };
-    const json = await res.json() as Record<string, unknown>;
-    return deserialize(json);
-  } catch {
-    return { ...EMPTY };
+/** Thrown when storage could not be read. Distinct from storage being empty. */
+export class StorageUnavailableError extends Error {
+  constructor(reason: string) {
+    super(`workout storage unavailable: ${reason}`);
+    this.name = 'StorageUnavailableError';
   }
+}
+
+/**
+ * Throws rather than returning EMPTY on failure. Returning empty data made a
+ * read error indistinguishable from an empty account, and every read-modify-
+ * write caller would then persist that emptiness over real records. Callers
+ * that cannot read the current state must not write.
+ */
+export async function loadWorkoutData(): Promise<StoredWorkoutData> {
+  let res: Response;
+  try {
+    res = await fetch(KV_API);
+  } catch {
+    throw new StorageUnavailableError('network');
+  }
+  if (!res.ok) throw new StorageUnavailableError(`http ${res.status}`);
+
+  let json: Record<string, unknown>;
+  try {
+    json = (await res.json()) as Record<string, unknown>;
+  } catch {
+    throw new StorageUnavailableError('unparseable body');
+  }
+
+  // An error envelope carries no records; deserializing it would yield empty
+  // arrays that look like a legitimately empty account.
+  if (json && typeof json === 'object' && 'error' in json && !('measurements' in json)) {
+    throw new StorageUnavailableError(String(json.error));
+  }
+
+  return deserialize(json);
 }
 
 export async function saveWorkoutData(data: StoredWorkoutData): Promise<void> {
@@ -101,5 +130,36 @@ export async function deleteSession(sessionId: string): Promise<void> {
   await saveWorkoutData({
     ...data,
     sessions: data.sessions.filter((s) => s.id !== sessionId),
+  });
+}
+
+/**
+ * Unions two day-keyed record sets. Local wins where both hold the same day,
+ * but a day only the remote side knows about survives — so a client carrying
+ * stale state cannot erase another device's entries merely by saving. Removal
+ * therefore needs an explicit call rather than an absence.
+ */
+export function mergeByDay<T extends { date: Date | string }>(remote: T[], local: T[]): T[] {
+  const byDay = new Map<string, T>();
+  for (const r of remote) byDay.set(localDateKey(r.date), r);
+  for (const l of local) byDay.set(localDateKey(l.date), l);
+  return [...byDay.values()].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+}
+
+export async function removeMeasurement(id: string): Promise<void> {
+  const data = await loadWorkoutData();
+  await saveWorkoutData({
+    ...data,
+    measurements: data.measurements.filter((m) => m.id !== id),
+  });
+}
+
+export async function removeNutrition(id: string): Promise<void> {
+  const data = await loadWorkoutData();
+  await saveWorkoutData({
+    ...data,
+    nutrition: (data.nutrition || []).filter((n) => n.id !== id),
   });
 }

@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "vite build && wrangler pages deploy dist",
-    "verify:subs": "tsx scripts/verify-substitutions.ts"
+    "verify:subs": "tsx scripts/verify-substitutions.ts",
+    "verify:storage": "tsx scripts/verify-storage-guards.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.18",

@@ -1,4 +1,4 @@
-const CACHE = 'femfit-v2';
+const CACHE = 'femfit-v3';
 
 const PRECACHE = [
   '/',
@@ -32,10 +32,15 @@ self.addEventListener('fetch', (e) => {
   // Always network-first for API calls and Cloudflare functions
   if (url.pathname.startsWith('/api/')) {
     e.respondWith(
-      fetch(request).catch(() =>
-        new Response(JSON.stringify({ error: 'offline' }), {
-          headers: { 'Content-Type': 'application/json' },
-        })
+      fetch(request).catch(
+        () =>
+          // 503, never a bare 200. A success-shaped body here is read as "no
+          // data stored", and the next save then writes that emptiness back.
+          new Response(JSON.stringify({ error: 'offline' }), {
+            status: 503,
+            statusText: 'Offline',
+            headers: { 'Content-Type': 'application/json' },
+          })
       )
     );
     return;
