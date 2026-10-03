@@ -5,11 +5,13 @@
   "scripts": {
     "dev": "wrangler pages dev dist --kv FEMFIT_KV",
     "dev:vite": "vite",
-    "build": "vite build",
+    "build": "npm run typecheck && vite build",
     "preview": "vite preview",
-    "deploy": "vite build && wrangler pages deploy dist",
+    "deploy": "npm test && npm run build && wrangler pages deploy dist --project-name femfit-cf",
     "verify:subs": "tsx scripts/verify-substitutions.ts",
-    "verify:storage": "tsx scripts/verify-storage-guards.ts"
+    "verify:storage": "tsx scripts/verify-storage-guards.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.functions.json",
+    "test": "npm run verify:subs && npm run verify:storage"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.18",

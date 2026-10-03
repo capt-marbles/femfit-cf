@@ -7,6 +7,7 @@ compatibility_date = "2024-09-23"
 binding = "FEMFIT_KV"
 id = "bb7340ce6cda4320bcce09772d67b8ee"
 
-# Hourly on the hour; each subscription fires only when its own local hour matches.
+# "0 * * * *": hourly reminders — each subscription fires only at its own local hour.
+# "30 4 * * *": daily KV snapshot (04:30 UTC, after the user's day has ended).
 [triggers]
-crons = ["0 * * * *"]
+crons = ["0 * * * *", "30 4 * * *"]

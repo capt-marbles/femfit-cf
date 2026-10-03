@@ -164,21 +164,105 @@ async function runReminders(env: Env, force = false): Promise<string> {
   return log.length ? log.join('; ') : 'nothing due this hour';
 }
 
+// ---------------------------------------------------------------------------
+// Backups
+// ---------------------------------------------------------------------------
+
+const BACKUP_CRON = '30 4 * * *';
+const BACKUP_PREFIX = 'femfit:backup:';
+// One extra hour past 14 days so the 14th-oldest snapshot is still present
+// when the next one lands.
+const BACKUP_TTL_SECONDS = 14 * 86_400 + 3_600;
+
+interface BackupMeta {
+  bytes: number;
+  measurements: number;
+  nutrition: number;
+  sessions: number;
+  routines: number;
+  takenAt: string;
+}
+
+/**
+ * Snapshots the whole record under a dated key. Each day is a separate key
+ * expiring on its own, so a snapshot of already-wiped data can never replace
+ * an earlier good one — the failure that made the intake loss hard to undo.
+ * Counts ride in KV metadata so listing shows them without fetching values.
+ */
+async function runBackup(env: Env): Promise<string> {
+  const raw = await env.FEMFIT_KV.get(DATA_KEY);
+  if (!raw) return 'no data to back up';
+
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    // Still worth keeping: an unparseable blob is exactly what you would want
+    // a copy of. Stored under a distinct key so it never shadows a good one.
+    const key = `${BACKUP_PREFIX}${new Date().toISOString().slice(0, 10)}-unparseable`;
+    await env.FEMFIT_KV.put(key, raw, { expirationTtl: BACKUP_TTL_SECONDS });
+    return `stored unparseable blob as ${key}`;
+  }
+
+  const count = (k: string) => (Array.isArray(parsed[k]) ? (parsed[k] as unknown[]).length : 0);
+  const metadata: BackupMeta = {
+    bytes: new TextEncoder().encode(raw).length,
+    measurements: count('measurements'),
+    nutrition: count('nutrition'),
+    sessions: count('sessions'),
+    routines: count('generatedRoutines'),
+    takenAt: new Date().toISOString(),
+  };
+
+  const key = `${BACKUP_PREFIX}${new Date().toISOString().slice(0, 10)}`;
+  await env.FEMFIT_KV.put(key, raw, { expirationTtl: BACKUP_TTL_SECONDS, metadata });
+  return `${key}: ${metadata.measurements} measurements, ${metadata.nutrition} nutrition, ${metadata.sessions} sessions (${metadata.bytes} bytes)`;
+}
+
+async function listBackups(env: Env): Promise<string> {
+  const { keys } = await env.FEMFIT_KV.list<BackupMeta>({ prefix: BACKUP_PREFIX });
+  if (keys.length === 0) return 'no backups yet';
+  return keys
+    .sort((a, b) => b.name.localeCompare(a.name))
+    .map((k) => {
+      const m = k.metadata;
+      const counts = m ? `m=${m.measurements} n=${m.nutrition} s=${m.sessions} ${m.bytes}B` : '(no metadata)';
+      const expires = k.expiration ? new Date(k.expiration * 1000).toISOString().slice(0, 10) : '?';
+      return `${k.name}  ${counts}  expires ${expires}`;
+    })
+    .join('\n');
+}
+
 export default {
-  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext) {
+  async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext) {
+    if (event.cron === BACKUP_CRON) {
+      ctx.waitUntil(runBackup(env).then((r) => console.log('[backup]', r)));
+      return;
+    }
     ctx.waitUntil(
       runReminders(env).then((r) => console.log('[reminders]', r))
     );
   },
 
-  // Manual trigger for testing: /test?token=<TEST_TOKEN>&force=1
+  // Token-guarded manual triggers:
+  //   /test?token=…&force=1   send reminders now
+  //   /backup?token=…         take a snapshot now
+  //   /backups?token=…        list snapshots
+  // Restore is deliberately not exposed here — it is a destructive write and
+  // stays a wrangler CLI operation.
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname !== '/test') return new Response('not found', { status: 404 });
+    const routes = ['/test', '/backup', '/backups'];
+    if (!routes.includes(url.pathname)) return new Response('not found', { status: 404 });
     if (!env.TEST_TOKEN || url.searchParams.get('token') !== env.TEST_TOKEN) {
       return new Response('unauthorized', { status: 401 });
     }
-    const result = await runReminders(env, url.searchParams.get('force') === '1');
-    return new Response(result, { headers: { 'Content-Type': 'text/plain' } });
+    const text =
+      url.pathname === '/backup'
+        ? await runBackup(env)
+        : url.pathname === '/backups'
+          ? await listBackups(env)
+          : await runReminders(env, url.searchParams.get('force') === '1');
+    return new Response(text, { headers: { 'Content-Type': 'text/plain' } });
   },
 };
