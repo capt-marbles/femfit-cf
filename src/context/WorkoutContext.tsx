@@ -14,6 +14,7 @@ import {
   MeasurementSettings,
   DailyNutrition,
   NutritionTargets,
+  Tombstones,
 } from '../types/workout';
 import {
   saveWorkoutData,
@@ -23,11 +24,10 @@ import {
   deleteGeneratedRoutine,
   saveSession as persistSession,
   deleteSession as removeSession,
-  mergeByDay,
-  removeMeasurement,
-  removeNutrition,
+  recordDeletion,
 } from '../lib/storage';
 import { localDateKey } from '../lib/dates';
+import { mergeByDay, mergeTombstones } from '../lib/sync';
 
 interface WorkoutContextType {
   generatedRoutines: GeneratedRoutine[];
@@ -71,6 +71,15 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   const [hasStoredData, setHasStoredData] = useState(false);
   // A client that could not read storage must never write to it.
   const [loadFailed, setLoadFailed] = useState(false);
+  // This device's deletions. Kept in state as well as written immediately, so a
+  // deletion made while offline still reaches storage with the next save.
+  const [tombstones, setTombstones] = useState<Tombstones>({});
+  // Read by the delete callbacks to find a record's day without rebuilding
+  // those callbacks on every edit.
+  const measurementsRef = useRef(measurements);
+  measurementsRef.current = measurements;
+  const nutritionRef = useRef(nutrition);
+  nutritionRef.current = nutrition;
 
   // Load from KV on mount
   useEffect(() => {
@@ -86,6 +95,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         setSessions(stored.sessions);
         setMeasurements(stored.measurements);
         setNutrition(stored.nutrition || []);
+        setTombstones(stored.tombstones || {});
         if (stored.nutritionTargets) setNutritionTargetsState(stored.nutritionTargets);
         if (stored.measurementGoals) setMeasurementGoalsState(stored.measurementGoals);
         if (stored.measurementSettings) setMeasurementSettingsState(stored.measurementSettings);
@@ -108,14 +118,19 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     if (measurementSaveTimerRef.current) clearTimeout(measurementSaveTimerRef.current);
     measurementSaveTimerRef.current = setTimeout(() => {
       loadWorkoutData().then((current) => {
+        const tombs: Tombstones = {
+          measurements: mergeTombstones(current.tombstones?.measurements, tombstones.measurements),
+          nutrition: mergeTombstones(current.tombstones?.nutrition, tombstones.nutrition),
+        };
         saveWorkoutData({
           ...current,
           // Merged, not replaced: this client may not have seen days another
-          // device logged since it loaded.
-          measurements: mergeByDay(current.measurements, measurements),
+          // device logged or deleted since it loaded.
+          measurements: mergeByDay(current.measurements, measurements, tombs.measurements),
           measurementGoals: measurementGoals || undefined,
           measurementSettings,
-          nutrition: mergeByDay(current.nutrition || [], nutrition),
+          nutrition: mergeByDay(current.nutrition || [], nutrition, tombs.nutrition),
+          tombstones: tombs,
           nutritionTargets: nutritionTargets || undefined,
           lastUpdated: new Date().toISOString(),
         }).then(() => {
@@ -124,7 +139,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         });
       });
     }, 1000);
-  }, [measurements, measurementGoals, measurementSettings, nutrition, nutritionTargets, isLoading, loadFailed]);
+  }, [measurements, measurementGoals, measurementSettings, nutrition, nutritionTargets, tombstones, isLoading, loadFailed]);
 
   const saveRoutine = useCallback((routine: GeneratedRoutine) => {
     setGeneratedRoutines((prev) => [routine, ...prev].slice(0, 10));
@@ -180,34 +195,51 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
           ([k, v]) => v !== undefined && k !== 'id' && k !== 'date'
         )
       );
+      const updatedAt = new Date().toISOString();
       const next = existing
-        ? prev.map((m) => (m === existing ? { ...m, ...supplied } : m))
-        : [...prev, measurement];
+        ? prev.map((m) => (m === existing ? { ...m, ...supplied, updatedAt } : m))
+        : [...prev, { ...measurement, updatedAt }];
       return next.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     });
   }, []);
 
   const updateMeasurement = useCallback((id: string, updates: Partial<BodyMeasurement>) => {
-    setMeasurements((prev) => prev.map((m) => m.id === id ? { ...m, ...updates } : m).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    const updatedAt = new Date().toISOString();
+    setMeasurements((prev) =>
+      prev
+        .map((m) => (m.id === id ? { ...m, ...updates, updatedAt } : m))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    );
   }, []);
 
   const deleteMeasurement = useCallback((id: string) => {
+    const target = measurementsRef.current.find((m) => m.id === id);
     setMeasurements((prev) => prev.filter((m) => m.id !== id));
-    removeMeasurement(id).catch(() => {});
+    if (!target) return;
+    const day = localDateKey(target.date);
+    const deletedAt = new Date().toISOString();
+    setTombstones((t) => ({ ...t, measurements: { ...t.measurements, [day]: deletedAt } }));
+    recordDeletion('measurements', day, deletedAt).catch(() => {});
   }, []);
 
   /** One entry per day: re-saving a date replaces that day rather than stacking. */
   const upsertNutrition = useCallback((entry: DailyNutrition) => {
-    const key = new Date(entry.date).toISOString().slice(0, 10);
+    const key = localDateKey(entry.date);
+    const stamped = { ...entry, updatedAt: new Date().toISOString() };
     setNutrition((prev) =>
-      [...prev.filter((n) => new Date(n.date).toISOString().slice(0, 10) !== key), entry]
+      [...prev.filter((n) => localDateKey(n.date) !== key), stamped]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     );
   }, []);
 
   const deleteNutrition = useCallback((id: string) => {
+    const target = nutritionRef.current.find((n) => n.id === id);
     setNutrition((prev) => prev.filter((n) => n.id !== id));
-    removeNutrition(id).catch(() => {});
+    if (!target) return;
+    const day = localDateKey(target.date);
+    const deletedAt = new Date().toISOString();
+    setTombstones((t) => ({ ...t, nutrition: { ...t.nutrition, [day]: deletedAt } }));
+    recordDeletion('nutrition', day, deletedAt).catch(() => {});
   }, []);
 
   const setNutritionTargets = useCallback((t: NutritionTargets) => {
@@ -219,7 +251,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
 
   const clearStoredData = useCallback(() => {
     setGeneratedRoutines([]); setSessions([]); setMeasurements([]);
-    setNutrition([]); setNutritionTargetsState(null);
+    setNutrition([]); setNutritionTargetsState(null); setTombstones({});
     setMeasurementGoalsState(null); setMeasurementSettingsState({ unit: 'imperial' });
     setLastUpdated(null); setHasStoredData(false);
     clearWorkoutData();

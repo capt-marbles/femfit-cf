@@ -144,6 +144,8 @@ export interface BodyMeasurement {
   thighRight?: number;
   bust?: number;
   notes?: string;
+  /** Last local edit, ISO. Decides merges between devices; absent on legacy records. */
+  updatedAt?: string;
 }
 
 export interface MeasurementGoals {
@@ -163,6 +165,16 @@ export interface DailyNutrition {
   carbs?: number;
   fat?: number;
   notes?: string;
+  /** Last local edit, ISO. Decides merges between devices; absent on legacy records. */
+  updatedAt?: string;
+}
+
+/** Local day key (YYYY-MM-DD) -> ISO time the day was deleted. */
+export type DayTombstones = Record<string, string>;
+
+export interface Tombstones {
+  measurements?: DayTombstones;
+  nutrition?: DayTombstones;
 }
 
 export interface NutritionTargets {
@@ -184,5 +196,6 @@ export interface StoredWorkoutData {
   measurementSettings?: MeasurementSettings;
   nutrition: DailyNutrition[];
   nutritionTargets?: NutritionTargets;
+  tombstones?: Tombstones;
   lastUpdated: string;
 }
